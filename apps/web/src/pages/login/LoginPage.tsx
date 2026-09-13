@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { loginApi } from '../../services/api/auth.api';
 import { routeForRole } from '../../lib/routing';
 import { useAuth } from '../../store/authStore';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ export function LoginPage() {
         <label>{t('username')}</label>
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" style={{ width: '100%', marginBottom: 8 }} />
         <label>{t('password')}</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" style={{ width: '100%', marginBottom: 8 }} />
+        <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" ariaLabel={t('password')} style={{ width: '100%', marginBottom: 8 }} />
         {err && <div style={{ color: 'red', marginBottom: 8 }}>{err}</div>}
         <button className="wh-btn" type="submit" style={{ width: '100%' }}>{t('login')}</button>
       </form>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usersApi, auditApi, settingsApi, discountsApi } from '../../services/api/erp.api';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 
 export function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -28,7 +29,7 @@ export function AdminPage() {
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         <input placeholder="الاسم الكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         <input placeholder="اسم المستخدم" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordInput placeholder="كلمة المرور" value={password} onChange={setPassword} autoComplete="new-password" />
         <select value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="employee">موظف</option><option value="manager">مدير</option>
         </select>

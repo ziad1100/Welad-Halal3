@@ -9,7 +9,10 @@
   ],
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=@welad/web",
+    "dev:web": "turbo dev --filter=@welad/web",
+    "dev:back": "turbo dev --filter=@welad/backend",
+    "dev:desktop": "turbo dev --filter=@welad/desktop",
     "lint": "turbo lint",
     "test": "turbo test"
   },

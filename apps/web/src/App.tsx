@@ -15,14 +15,16 @@ import { AdminPage } from './pages/admin/AdminPage';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { ModuleMenuBar } from './components/layout/ModuleMenuBar';
 import { BrandingHeader } from './components/layout/BrandingHeader';
+import { SessionInfoBar } from './components/layout/SessionInfoBar';
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="layout">
+      <SessionInfoBar />
       <BrandingHeader />
       <ModuleMenuBar />
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{children}</div>
-      <div style={{ fontSize: 11, color: '#666', padding: '2px 8px' }}>ولاد حلال | Welad Halal POS — اضغط لمعلومات</div>
+      <div className="wh-statusbar"><span>اضغط لمعلومات</span><span>ولاد حلال - برنامج إدارة الطلبات</span></div>
     </div>
   );
 }

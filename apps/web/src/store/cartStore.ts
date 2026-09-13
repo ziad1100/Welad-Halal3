@@ -6,6 +6,8 @@ export interface CartLine {
   unitId?: string | null;
   name: string;
   unitName: string;
+  category?: string;
+  addedAt?: number;
   price: number;
   qty: number;
 }

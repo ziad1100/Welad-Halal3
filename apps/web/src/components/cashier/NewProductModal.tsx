@@ -15,6 +15,9 @@ export function NewProductModal({ barcode, onClose, onSaved }: { barcode: string
   const [price, setPrice] = useState(0);
   const [tax, setTax] = useState(0);
   const [qty, setQty] = useState(0);
+  const [purchaseUnit, setPurchaseUnit] = useState('وحدة');
+  const [defaultPurchase, setDefaultPurchase] = useState(true);
+  const [supplierCode, setSupplierCode] = useState('');
   const [units, setUnits] = useState<{ unitName: string; barcode: string; sellingPrice: number }[]>([]);
   const [uName, setUName] = useState('');
   const [uPrice, setUPrice] = useState(0);
@@ -53,13 +56,15 @@ export function NewProductModal({ barcode, onClose, onSaved }: { barcode: string
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50, display: 'grid', placeItems: 'center' }}>
       <div className="wh-modal" style={{ width: 560, maxHeight: '90vh', overflow: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="wh-modal-title">
           <strong>بيانات صنف</strong>
-          <button className="wh-btn" onClick={onClose}>X</button>
+          <span style={{ display: 'flex', gap: 4 }}>
+            <button className="wh-btn" title="مساعدة">؟</button>
+            <button className="wh-btn" onClick={onClose}>X</button>
+          </span>
         </div>
         <div style={{ margin: '8px 0' }}>
-          <span>النوع: </span>
-          {[['stock', 'صنف مخزوني'], ['service', 'صنف خدمي'], ['raw', 'خامات'], ['composite', 'صنف مجموع']].map(([v, l]) => (
+          {[['composite', 'صنف مجموع'], ['raw', 'خامات'], ['service', 'صنف خدمي'], ['stock', 'صنف مخزوني']].map(([v, l]) => (
             <label key={v} style={{ marginInlineEnd: 10 }}>
               <input type="radio" checked={kind === v} onChange={() => setKind(v)} /> {l}
             </label>
@@ -74,11 +79,25 @@ export function NewProductModal({ barcode, onClose, onSaved }: { barcode: string
           <option value="">—</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        <label>وحدة الشراء:</label>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+          <select value={purchaseUnit} onChange={(e) => setPurchaseUnit(e.target.value)} style={{ width: 160 }}>
+            <option value="وحدة">وحدة</option>
+            <option value="كرتونة">كرتونة</option>
+            <option value="كيلو">كيلو</option>
+          </select>
+          <label><input type="radio" checked={defaultPurchase} onChange={() => setDefaultPurchase(true)} /> وحدة شراء افتراضية</label>
+        </div>
         <label>باركود:</label>
-        <div className="barcode-field" style={{ padding: 8, marginBottom: 6, direction: 'ltr', textAlign: 'left' }}>{barcode}</div>
         <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+          <div className="barcode-field" style={{ padding: 8, direction: 'ltr', textAlign: 'left', flex: 1, fontFamily: 'monospace' }}>{barcode}</div>
+          <button className="wh-btn" title="مسح باركود">📷</button>
+        </div>
+        <label>كود المورد:</label>
+        <input value={supplierCode} onChange={(e) => setSupplierCode(e.target.value)} style={{ width: '100%', marginBottom: 6 }} />
+        <div className="wh-tabs">
           {tabs.map((t) => (
-            <button key={t.id} className="wh-btn" onClick={() => setTab(t.id)} style={tab === t.id ? { background: '#cfe0cb' } : {}}>{t.label}</button>
+            <button key={t.id} className={`wh-tab${tab === t.id ? ' wh-tab-active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
           ))}
         </div>
         {tab === 'pricing' && (
@@ -98,9 +117,9 @@ export function NewProductModal({ barcode, onClose, onSaved }: { barcode: string
         {tab === 'inventory' && <div>رصيد افتتاحي: <input type="number" value={qty} onChange={(e) => setQty(Number(e.target.value))} style={{ width: 100 }} /> (الفرع الرئيسي)</div>}
         {tab === 'options' && <div>لا خيارات إضافية بعد.</div>}
         {err && <div style={{ color: 'red', marginTop: 6 }}>{err}</div>}
-        <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-          <button className="wh-btn" onClick={save}>حفظ</button>
-          <button className="wh-btn" onClick={onClose}>إلغاء</button>
+        <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'flex-start' }}>
+          <button className="wh-btn" onClick={save}>💾 حفظ</button>
+          <button className="wh-btn" onClick={onClose}>إلغاء/بعد ذلك</button>
         </div>
       </div>
     </div>

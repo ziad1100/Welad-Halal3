@@ -5,6 +5,7 @@ import { cancelOrder, confirmOrder, getOrder, holdOrder, listOrders } from '../.
 import { shiftsApi } from '../../services/api/erp.api';
 import { useCart } from '../../store/cartStore';
 import { useOrder } from '../../store/orderStore';
+import { useAuth } from '../../store/authStore';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { NewProductModal } from '../../components/cashier/NewProductModal';
 import { CustomerPickerModal } from '../../components/cashier/CustomerPickerModal';
@@ -21,6 +22,7 @@ export function CashierPage() {
   const nav = useNavigate();
   const { lines, addLine, setQty, remove, clear, subtotal, count, orderType, setOrderType, customerId, setCustomer } = useCart();
   const { lastOrder, setLastOrder } = useOrder();
+  const username = useAuth((s) => s.user?.username ?? '');
   const [catalog, setCatalog] = useState<any[]>([]);
   const [cats, setCats] = useState<any[]>([]);
   const [pinnedOnly, setPinnedOnly] = useState(false);
@@ -49,6 +51,9 @@ export function CashierPage() {
       setOrderNo(nextDraftNo(rows?.[0]?.reference ?? null));
     }).catch(() => setOrderNo(1));
   }, []);
+  useEffect(() => {
+    document.title = `(ولاد حلال) شاشة بيانات الطلب - المستخدم: ${username}`;
+  }, [username]);
   useEffect(() => {
     const t = setTimeout(() => { load().catch(() => {}); }, 200);
     return () => clearTimeout(t);
@@ -129,10 +134,13 @@ export function CashierPage() {
       else if (e.key === 'F12') { e.preventDefault(); void doConfirm(); }
       else if (e.key === 'F2') { e.preventDefault(); setShowPicker(true); }
       else if (e.key === 'F4') { e.preventDefault(); document.getElementById('search-input')?.focus(); }
+      else if (e.key === 'Escape') {
+        if (lines.length > 0) { clear(); setMsg('تم إلغاء المسودة'); }
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [doHold, doConfirm]);
+  }, [doHold, doConfirm, lines.length, clear]);
 
   // Print receipt whenever a fresh order is set for printing.
   useEffect(() => {
@@ -237,7 +245,7 @@ export function CashierPage() {
       {/* SEARCH/FILTER BAR */}
       <div className="wh-filterbar">
         <button className="wh-btn" onClick={() => setPinnedOnly((v) => !v)} title="تصفية بالتصنيفات المثبتة">
-          📌 تصنيفات مثبتة (F4)
+          📍 تصنيفات مثبتة (F4)
         </button>
         <button className="wh-btn" onClick={() => setShowPins((v) => !v)} title="إظهار/إخفاء التصنيفات" aria-pressed={showPins}>
           👁
@@ -248,6 +256,7 @@ export function CashierPage() {
         </select>
         <input
           id="search-input"
+          className="wh-search-tint"
           placeholder="🔍 بحث في الأصناف"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -260,6 +269,7 @@ export function CashierPage() {
         </select>
         <span title="عرض شبكي">▦</span>
         <span title="ماسح">📷</span>
+        <span title="إعدادات العرض">⚙</span>
         <span style={{ fontSize: 12 }}>تعديل العرض</span>
       </div>
       {showPins && pinnedCats.length > 0 && (
@@ -270,7 +280,7 @@ export function CashierPage() {
               className={`wh-btn${catId === c.id ? ' wh-chip-on' : ''}`}
               onClick={() => setCatId((v) => (v === c.id ? '' : c.id))}
             >
-              📌 {c.name}
+              📍 {c.name}
             </button>
           ))}
         </div>
@@ -280,38 +290,37 @@ export function CashierPage() {
         <div style={{ overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* CATALOG TABLE */}
           <table className="wh-table">
-            <thead><tr><th>التصنيف</th><th>الصنف</th><th>الوصف</th><th>باركود</th><th>رصيد</th><th>قطاعي</th></tr></thead>
+            <thead><tr><th>التصنيف</th><th>الصنف</th><th>الوصف</th><th>باركود</th><th>رصيد</th><th>قطاعي</th><th>-</th></tr></thead>
             <tbody>
               {visibleCatalog.map((p) => (
                 <tr key={p.id} onClick={() => addProduct(p, null)} style={{ cursor: 'pointer' }} className="wh-pink">
                   <td>{p.categoryName ?? ''}</td><td>{p.name}</td><td>{p.description ?? ''}</td>
                   <td>{p.barcode ?? ''}</td><td>{p.stockQty}</td><td>{Number(p.basePrice).toFixed(2)}</td>
+                  <td>-</td>
                 </tr>
               ))}
               {visibleCatalog.length === 0 && (
-                <tr><td colSpan={6} style={{ textAlign: 'left' }}>..</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: 'left' }}>..</td></tr>
               )}
             </tbody>
           </table>
 
           {/* CART TABLE */}
           <table className="wh-table">
-            <thead><tr><th>التصنيف</th><th>الصنف</th><th>التسعير</th><th>السعر</th><th>الكمية</th><th>السعر الكلي</th><th></th></tr></thead>
+            <thead><tr><th>م</th><th>التصنيف</th><th>الصنف</th><th>التسعير</th><th>السعر</th><th>الكمية</th><th>السعر الكلي</th><th>الوقت</th><th>-</th></tr></thead>
             <tbody>
-              {lines.map((l) => (
+              {lines.map((l, i) => (
                 <tr key={l.key} className="wh-active">
-                  <td>{l.category ?? ''}</td><td>{l.name}</td><td>{l.unitName}</td>
+                  <td>{i + 1}</td><td>{l.category ?? ''}</td><td>{l.name}</td><td>{l.unitName}</td>
                   <td>{Number(l.price).toFixed(2)}</td>
                   <td><input type="number" min={0.1} step={1} value={l.qty} onChange={(e) => setQty(l.key, Number(e.target.value))} style={{ width: 70 }} /></td>
                   <td>{(Number(l.price) * Number(l.qty)).toFixed(2)}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>
-                    {l.addedAt ? new Date(l.addedAt).toLocaleString('ar-EG') : ''}
-                    {' '}<button className="wh-btn" onClick={() => remove(l.key)}>x</button>
-                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{l.addedAt ? new Date(l.addedAt).toLocaleString('ar-EG') : ''}</td>
+                  <td><button className="wh-btn" onClick={() => remove(l.key)}>x</button></td>
                 </tr>
               ))}
               {lines.length === 0 && (
-                <tr><td colSpan={7}>&nbsp;</td></tr>
+                <tr><td colSpan={9}>&nbsp;</td></tr>
               )}
             </tbody>
           </table>
@@ -319,7 +328,9 @@ export function CashierPage() {
 
         {/* LEFT SIDEBAR */}
         <div>
-          <label>عدد الأصناف:</label>
+          <label>عدد الوحدات:</label>
+          <div className="wh-count-box">{lines.length}</div>
+          <label style={{ display: 'block', marginTop: 8 }}>عدد الأصناف:</label>
           <div className="wh-count-box">{count()}</div>
           <label style={{ display: 'block', marginTop: 8 }}>إحمالي الفاتورة:</label>
           <div className="wh-total-box">{subtotal().toFixed(2)} ج.م</div>
@@ -327,17 +338,22 @@ export function CashierPage() {
         </div>
       </div>
 
-      {/* BOTTOM ACTION BAR */}
+      {/* BOTTOM ACTION BAR — row 1 */}
       <div className="bottom-bar">
         <button className="wh-btn" onClick={() => nav('/orders')}>☰ الطلبات ▾</button>
         <button className="wh-btn" onClick={() => nav('/purchases')}>📦 المشتريات ▾</button>
         <button className="wh-btn" onClick={() => nav('/inventory')}>📏 الأصناف ▾</button>
-        <button className="wh-btn" onClick={doReturn}>↩ مرتجع</button>
+        <button className="wh-btn" onClick={doReturn}><span className="wh-icon-return">↩</span> مرتجع</button>
         <button className="wh-btn" onClick={() => setShowExpense(true)}>🪙 المصروفات ▾</button>
         <button className="wh-btn" onClick={doDrawer}>🗄 فتح الدرج</button>
+      </div>
+      {/* BOTTOM ACTION BAR — row 2 */}
+      <div className="bottom-bar bottom-bar-row2">
         <button className="wh-btn" onClick={doReprint}>🖨 طباعة نسخة</button>
         <button className="wh-btn" onClick={doHold}>⏸ تعليق الفاتورة (F9)</button>
-        <button className="wh-btn wh-primary" onClick={doConfirm}>✅ تأكيد (F12)</button>
+        <button className="wh-btn wh-primary" onClick={doConfirm}><span className="wh-confirm-dot" style={{ display: 'inline-flex', width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>✓</span> تأكيد (F12)</button>
+        <span style={{ flex: 1 }} />
+        <button className="wh-btn" onClick={() => { if (lines.length > 0) { clear(); setMsg('تم إلغاء المسودة'); } }}>إلغاء (Esc)</button>
       </div>
 
       {showPicker && (

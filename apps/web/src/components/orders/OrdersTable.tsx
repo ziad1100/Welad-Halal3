@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const ORDER_COLUMNS = [
   'رقم الطلب',
@@ -31,13 +31,25 @@ function fmtDT(v: any): string {
 }
 
 // Dense 13-column orders table: pink rows, blue selected row, 1px grid cells.
-export function OrdersTable({ orders, showResume, onSelect, onResume }: {
+export function OrdersTable({ orders, showResume, initialReference, onSelect, onResume }: {
   orders: any[];
   showResume?: boolean;
+  initialReference?: string;
   onSelect?: (o: any) => void;
   onResume?: (o: any) => void;
 }) {
   const [sel, setSel] = useState<string | null>(null);
+  const [autoPicked, setAutoPicked] = useState(false);
+  useEffect(() => {
+    if (!autoPicked && initialReference && orders.length > 0) {
+      const found = orders.find((o) => String(o.reference) === initialReference);
+      if (found) {
+        setSel(found.id);
+        onSelect?.(found);
+        setAutoPicked(true);
+      }
+    }
+  }, [autoPicked, initialReference, orders, onSelect]);
   return (
     <div style={{ overflow: 'auto' }}>
       <table className="wh-table">

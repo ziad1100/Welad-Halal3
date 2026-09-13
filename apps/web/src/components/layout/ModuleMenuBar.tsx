@@ -5,10 +5,10 @@ import { useAuth } from '../../store/authStore';
 import { applyDir } from '../../lib/i18n';
 
 const ITEMS: { to: string; ar: string; minLevel: number }[] = [
-  { to: '/orders', ar: 'المبيعات', minLevel: 50 },
+  { to: '/cashier', ar: 'بداية', minLevel: 10 },
   { to: '/suppliers', ar: 'الموردين والعملاء', minLevel: 50 },
-  { to: '/inventory', ar: 'مخزن', minLevel: 50 },
   { to: '/manufacturing', ar: 'تصنيع', minLevel: 50 },
+  { to: '/inventory', ar: 'مخزن', minLevel: 50 },
   { to: '/purchases', ar: 'المشتريات', minLevel: 50 },
   { to: '/expenses', ar: 'مصروفات', minLevel: 10 },
   { to: '/reports', ar: 'تقارير العمل', minLevel: 50 },
@@ -30,7 +30,7 @@ export function ModuleMenuBar() {
     <nav className="wh-menubar">
       <button className="wh-btn" onClick={() => setHelp(true)}>مساعدة</button>
       {ITEMS.filter((i) => level >= i.minLevel).map((i) => (
-        <Link key={i.to} to={i.to}>{i.ar}</Link>
+        <Link key={i.ar} to={i.to}>{i.ar}</Link>
       ))}
       <span style={{ flex: 1 }} />
       <button className="wh-btn" onClick={() => lang('ar')}>عربي</button>

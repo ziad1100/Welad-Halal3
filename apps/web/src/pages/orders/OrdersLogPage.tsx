@@ -14,6 +14,9 @@ export function OrdersLogPage() {
   const [selected, setSelected] = useState<any | null>(null);
 
   useEffect(() => { listOrders().then(setOrders).catch(() => {}); }, []);
+  useEffect(() => {
+    document.title = 'برنامج إدارة الطلبات - الشاشة الرئيسية';
+  }, []);
 
   const reps = useMemo(() => {
     const s = new Set<string>();
@@ -38,7 +41,7 @@ export function OrdersLogPage() {
       </div>
       <div className="wh-filterbar">
         <label>رقم الطلب</label>
-        <input value={ref} onChange={(e) => setRef(e.target.value)} style={{ width: 120, background: '#cfe0cb' }} />
+        <input value={ref} onChange={(e) => setRef(e.target.value)} className="wh-ref-pill" style={{ width: 120 }} placeholder="رقم الطلب" />
         <select value={type} onChange={(e) => setType(e.target.value)}>
           <option value="">كل أنواع الطلب ▾</option>
           <option value="pickup">استلام</option>
@@ -53,7 +56,7 @@ export function OrdersLogPage() {
         <input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="اسم العميل" style={{ width: 140 }} />
       </div>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 8 }}>
-        <OrdersTable orders={filtered} onSelect={setSelected} />
+        <OrdersTable orders={filtered} initialReference="147" onSelect={setSelected} />
         {selected && (
           <div className="wh-modal" style={{ marginTop: 8 }}>
             <div className="wh-modal-title">

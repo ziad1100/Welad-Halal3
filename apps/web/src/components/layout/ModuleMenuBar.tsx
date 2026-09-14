@@ -5,7 +5,7 @@ import { useAuth } from '../../store/authStore';
 import { applyDir } from '../../lib/i18n';
 
 const ITEMS: { to: string; ar: string; minLevel: number }[] = [
-  { to: '/cashier', ar: 'بداية', minLevel: 10 },
+  { to: '/orders', ar: 'المبيعات', minLevel: 50 },
   { to: '/suppliers', ar: 'الموردين والعملاء', minLevel: 50 },
   { to: '/manufacturing', ar: 'تصنيع', minLevel: 50 },
   { to: '/inventory', ar: 'مخزن', minLevel: 50 },

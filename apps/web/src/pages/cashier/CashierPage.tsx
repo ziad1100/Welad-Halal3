@@ -12,10 +12,21 @@ import { CustomerPickerModal } from '../../components/cashier/CustomerPickerModa
 import { ExpenseQuickModal } from '../../components/cashier/ExpenseQuickModal';
 import { ReceiptPrintView } from '../../components/receipt/ReceiptPrintView';
 
-function nextDraftNo(ref: string | null): number {
-  if (!ref) return 1;
-  const m = ref.match(/(\d+)\s*$/);
-  return m ? Number(m[1]) + 1 : 1;
+function nextDraftNo(rows: any[]): number {
+  for (const r of rows) {
+    const ref = String(r?.reference ?? '').trim();
+    if (/^\d+$/.test(ref)) return Number(ref) + 1;
+  }
+  return 1;
+}
+
+function fmtTime(ts: number): string {
+  const d = new Date(ts);
+  const p = (n: number) => String(n).padStart(2, '0');
+  let h = d.getHours();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(h)}:${p(d.getMinutes())}${ap}`;
 }
 
 export function CashierPage() {
@@ -48,7 +59,7 @@ export function CashierPage() {
   useEffect(() => {
     listCategories().then(setCats).catch(() => {});
     listOrders().then((rows: any[]) => {
-      setOrderNo(nextDraftNo(rows?.[0]?.reference ?? null));
+      setOrderNo(nextDraftNo(rows ?? []));
     }).catch(() => setOrderNo(1));
   }, []);
   useEffect(() => {
@@ -315,7 +326,7 @@ export function CashierPage() {
                   <td>{Number(l.price).toFixed(2)}</td>
                   <td><input type="number" min={0.1} step={1} value={l.qty} onChange={(e) => setQty(l.key, Number(e.target.value))} style={{ width: 70 }} /></td>
                   <td>{(Number(l.price) * Number(l.qty)).toFixed(2)}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{l.addedAt ? new Date(l.addedAt).toLocaleString('ar-EG') : ''}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{l.addedAt ? fmtTime(l.addedAt) : ''}</td>
                   <td><button className="wh-btn" onClick={() => remove(l.key)}>x</button></td>
                 </tr>
               ))}

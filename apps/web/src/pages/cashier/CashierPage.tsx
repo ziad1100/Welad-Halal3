@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { barcodeLookup, listCategories, searchProducts } from '../../services/api/products.api';
 import { confirmOrder, getOrder, holdOrder, listOrders } from '../../services/api/orders.api';
-import { discountsApi } from '../../services/api/erp.api';
+import { discountsApi, settingsApi } from '../../services/api/erp.api';
 import { useCart } from '../../store/cartStore';
 import { useOrder } from '../../store/orderStore';
 import { useAuth } from '../../store/authStore';
@@ -12,6 +12,8 @@ import { useDir } from '../../store/lang';
 import { CustomerModal } from '../../components/pos/CustomerModal';
 import { ExpenseModal } from '../../components/pos/ExpenseModal';
 import { ReturnModal } from '../../components/pos/ReturnModal';
+import { PaymentModal } from '../../components/pos/PaymentModal';
+import { ManagerGate } from '../../components/pos/ManagerGate';
 import { ProductModal } from '../../components/product/ProductModal';
 import { SearchableSelect } from '../../components/shared/SearchableSelect';
 import { lookupCategoriesLocal, lookupReps } from '../../services/api/lookups';
@@ -71,6 +73,10 @@ function POSBody() {
   const [showReturn, setShowReturn] = useState(false);
   const [showExpense, setShowExpense] = useState(false);
   const [showProduct, setShowProduct] = useState(false);
+  const [showPay, setShowPay] = useState(false);
+  const [showMgr, setShowMgr] = useState<null | { kind: 'discount' }>(null);
+  const [approvalToken, setApprovalToken] = useState<string | null>(null);
+  const [discThreshold, setDiscThreshold] = useState(200);
   const [prefillBarcode, setPrefillBarcode] = useState('');
   const [msg, setMsg] = useState<{ t: 'err' | 'ok'; m: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -97,6 +103,10 @@ function POSBody() {
   useEffect(() => {
     listCategories().then(setCats).catch(() => {});
     listOrders().then((rows: any[]) => setOrderNo(nextDraftNo(rows ?? []))).catch(() => setOrderNo(1));
+    settingsApi.all().then((rows: any[]) => {
+      const v = Number((rows || []).find((r: any) => r.key === 'discount_approval_threshold')?.value ?? 200);
+      if (Number.isFinite(v) && v >= 0) setDiscThreshold(v);
+    }).catch(() => {});
   }, []);
   useEffect(() => ReceiptPrinterService.onChange(setPrintStatus), []);
 
@@ -186,35 +196,61 @@ function POSBody() {
 
   const bumpOrderNo = useCallback(() => setOrderNo((n) => (n == null ? n : n + 1)), []);
 
-  async function submit(status: 'HELD' | 'CONFIRMED') {
+  /** Open the payment dialog; large discounts detour through manager approval first. */
+  function beginPay() {
+    if (busy) return;
+    if (!lines.length) { flash('err', 'السلة فارغة'); return; }
+    if (discountAmount > discThreshold && !approvalToken) { setShowMgr({ kind: 'discount' }); return; }
+    setShowPay(true);
+  }
+
+  async function doHold() {
     if (busy) return;
     if (!lines.length) { flash('err', 'السلة فارغة'); return; }
     setBusy(true);
-    const payload = {
-      lines: lines.map((l) => ({ productId: l.productId, unitId: l.unitId, qty: l.qty })),
-      type: orderType,
-      paymentMethod: payment,
-      ...(cartCustomerId ? { customerId: cartCustomerId } : {}),
-      ...(status === 'CONFIRMED' && discountCode.trim() ? { discountCode: discountCode.trim() } : {}),
-    };
     try {
-      if (status === 'HELD') {
-        const order = await holdOrder(payload);
-        flash('ok', `تم تعليق الفاتورة: ${order.reference}`);
-      } else {
-        const order = await confirmOrder(payload);
-        const full = await getOrder(order.id).catch(() => order);
-        setLastOrder(full);
-        flash('ok', `تم تأكيد الطلب: ${full.reference} — ${Number(full.total).toFixed(2)} ج.م`);
-        const cfg = loadPrinterConfig();
-        if (cfg.autoPrint) {
-          const ok = await ReceiptPrinterService.printReceipt(orderToReceipt(full, false), cfg);
-          if (!ok) flash('err', `${ReceiptPrinterService.lastError} — الطلب محفوظ: ${full.reference} (إعادة المحاولة من طباعة نسخة)`);
-        }
-        if (cfg.openCashDrawer) void ReceiptPrinterService.kickDrawer(cfg);
+      const order = await holdOrder({
+        lines: lines.map((l) => ({ productId: l.productId, unitId: l.unitId, qty: l.qty })),
+        type: orderType,
+        ...(cartCustomerId ? { customerId: cartCustomerId } : {}),
+      });
+      flash('ok', `تم تعليق الفاتورة: ${order.reference}`);
+      clear();
+      bumpOrderNo();
+    } catch (e: any) {
+      const m = e?.response?.data?.message;
+      flash('err', Array.isArray(m) ? m.join('، ') : (m || 'حدث خطأ أثناء حفظ الطلب'));
+    } finally { setBusy(false); }
+  }
+
+  async function doConfirm(amountPaid: number) {
+    if (busy) return;
+    if (!lines.length) { flash('err', 'السلة فارغة'); return; }
+    setBusy(true);
+    setShowPay(false);
+    try {
+      const order = await confirmOrder({
+        lines: lines.map((l) => ({ productId: l.productId, unitId: l.unitId, qty: l.qty })),
+        type: orderType,
+        paymentMethod: payment,
+        ...(cartCustomerId ? { customerId: cartCustomerId } : {}),
+        ...(discountCode.trim() ? { discountCode: discountCode.trim() } : {}),
+        amountPaid,
+        ...(approvalToken ? { approvalToken } : {}),
+      });
+      const full = await getOrder(order.id).catch(() => order);
+      setLastOrder(full);
+      const paid = full.payments?.[0];
+      flash('ok', `تم تأكيد الطلب: ${full.reference} — ${Number(full.total).toFixed(2)} ج.م${paid ? ` — الباقي ${Number(paid.change).toFixed(2)}` : ''}`);
+      const cfg = loadPrinterConfig();
+      if (cfg.autoPrint) {
+        const ok = await ReceiptPrinterService.printReceipt(orderToReceipt(full, false), cfg);
+        if (!ok) flash('err', `${ReceiptPrinterService.lastError} — الطلب محفوظ: ${full.reference} (إعادة المحاولة من طباعة نسخة)`);
       }
+      if (cfg.openCashDrawer) void ReceiptPrinterService.kickDrawer(cfg);
       clear();
       setDiscountCode(''); setCodeCheck(null);
+      setApprovalToken(null);
       setPayment('cash');
       bumpOrderNo();
     } catch (e: any) {
@@ -239,10 +275,12 @@ function POSBody() {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'F2') { e.preventDefault(); setShowCustomers(true); }
       else if (e.key === 'F4') { e.preventDefault(); catRef.current?.focus(); }
-      else if (e.key === 'F9') { e.preventDefault(); void submit('HELD'); }
-      else if (e.key === 'F12') { e.preventDefault(); void submit('CONFIRMED'); }
+      else if (e.key === 'F9') { e.preventDefault(); void doHold(); }
+      else if (e.key === 'F10') { e.preventDefault(); beginPay(); }
+      else if (e.key === 'F12') { e.preventDefault(); beginPay(); }
       else if (e.key === 'Escape') {
         setShowCustomers(false); setShowProduct(false); setShowReturn(false); setShowExpense(false); setPreviewLines(null);
+        setShowPay(false); setShowMgr(null);
         if (lines.length > 0 && (document.activeElement?.tagName !== 'INPUT' || (document.activeElement as HTMLInputElement).type !== 'number')) {
           // Esc on empty focus clears nothing; draft cancel is explicit via button.
         }
@@ -251,7 +289,7 @@ function POSBody() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lines, cartCustomerId, orderType, discountCode, payment]);
+  }, [lines, cartCustomerId, orderType, discountCode, payment, discountAmount, discThreshold, approvalToken]);
 
   const pinnedCats = cats.filter((c) => pins.includes(c.id));
 
@@ -403,8 +441,9 @@ function POSBody() {
         <button className="kbtn" disabled={printStatus === 'printing'} onClick={() => void printCopy()}>
           {printStatus === 'printing' ? 'جاري الطباعة…' : '🖨 طباعة نسخة'}
         </button>
-        <button className="kbtn" disabled={busy || !lines.length} onClick={() => void submit('HELD')}>⏸ تعليق الفاتورة (F9)</button>
-        <button className="kbtn kbtn-primary" disabled={busy || !lines.length} onClick={() => void submit('CONFIRMED')} style={{ padding: '8px 22px' }}>✅ تأكيد (F12)</button>
+        <button className="kbtn" disabled={busy || !lines.length} onClick={() => void doHold()}>⏸ تعليق الفاتورة (F9)</button>
+        <button className="kbtn" disabled={busy || !lines.length} onClick={beginPay}>💵 الدفع (F10)</button>
+        <button className="kbtn kbtn-primary" disabled={busy || !lines.length} onClick={beginPay} style={{ padding: '8px 22px' }}>✅ تأكيد (F12)</button>
         <span style={{ flex: 1 }} />
         <button className="kbtn" onClick={() => { if (lines.length) { clear(); flash('ok', 'تم إلغاء المسودة'); } }}>إلغاء (Esc)</button>
       </div>
@@ -422,6 +461,10 @@ function POSBody() {
       }} />}
       {showExpense && <ExpenseModal onClose={() => setShowExpense(false)} onDone={(m) => flash('ok', m)} />}
       {previewLines && <ReceiptPreview lines={previewLines} onClose={() => setPreviewLines(null)} />}
+      {showPay && <PaymentModal subtotal={totalsTotal} discount={discountAmount} total={payable}
+        onClose={() => setShowPay(false)} onPay={(amt) => void doConfirm(amt)} />}
+      {showMgr && <ManagerGate title="اعتماد خصم كبير" onClose={() => setShowMgr(null)}
+        onApproved={(token) => { setApprovalToken(token); setShowMgr(null); setShowPay(true); }} />}
     </div>
   );
 }

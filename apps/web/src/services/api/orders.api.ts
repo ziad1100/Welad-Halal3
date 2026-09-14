@@ -16,7 +16,7 @@ export async function getOrder(id: string) {
   const { data } = await api.get(`/orders/${id}`);
   return data;
 }
-export async function cancelOrder(id: string) {
-  const { data } = await api.post(`/orders/${id}/cancel`, {});
+export async function cancelOrder(id: string, approvalToken?: string) {
+  const { data } = await api.post(`/orders/${id}/cancel`, approvalToken ? { approvalToken } : {});
   return data;
 }

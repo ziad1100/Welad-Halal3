@@ -14,6 +14,13 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('approve')
+  @HttpCode(200)
+  approve(@Body() dto: { username: string; password: string }) {
+    return this.auth.approve(dto.username, dto.password);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@Req() req: any) {
     return this.auth.me(req.user.sub);

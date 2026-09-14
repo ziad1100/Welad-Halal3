@@ -28,7 +28,7 @@ export class OrdersController {
   }
 
   @Post(':id/cancel')
-  cancel(@Req() req: any, @Param('id') id: string) {
-    return this.orders.cancel(req.user.sub, id);
+  cancel(@Req() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.orders.cancel(req.user, id, dto?.approvalToken);
   }
 }

@@ -147,6 +147,8 @@ export function buildReceiptText(r: ReceiptData, cfg: PrinterConfig, width: Pape
   // 6. Payment method — small gap, no divider.
   L.push({ text: '' });
   L.push({ text: `الدفع: ${r.paymentMethod || 'نقدي'}` });
+  if (r.amountPaid !== undefined) L.push({ text: row('المدفوع:', money(r.amountPaid), width) });
+  if (r.change !== undefined) L.push({ text: row('الباقي:', money(r.change), width) });
 
   if (r.storePhone) {
     L.push({ text: row('للتواصل:', r.storePhone, width) });

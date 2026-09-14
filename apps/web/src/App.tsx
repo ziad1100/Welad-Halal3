@@ -60,7 +60,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               <strong>مساعدة — اختصارات</strong>
               <button className="wh-btn" onClick={() => setHelp(false)}>X</button>
             </div>
-            <div>F2 — اختيار عميل<br />F4 — التركيز على البحث<br />F9 — تعليق الفاتورة<br />F12 — تأكيد الطلب</div>
+            <div>F2 — اختيار عميل<br />F4 — التركيز على البحث<br />F9 — تعليق الفاتورة<br />F10 — الدفع نقدًا<br />F12 — تأكيد الطلب</div>
             <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
               <button className="wh-btn" onClick={() => setHelp(false)}>إغلاق</button>
             </div>

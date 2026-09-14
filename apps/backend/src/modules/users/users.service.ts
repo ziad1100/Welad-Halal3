@@ -19,18 +19,19 @@ export class UsersService {
     if (!dto.password || String(dto.password).length < 4) throw new BadRequestException('password too short');
     const role = dto.role ?? 'employee';
     const level = role === 'owner' ? 100 : role === 'manager' ? 50 : 10;
-    if (role !== 'employee' && actor.permissionLevel < 100 && role === 'owner') {
-      throw new ForbiddenException('Only owner can create owners');
-    }
     if (actor.permissionLevel < 50) throw new ForbiddenException('Forbidden');
+    if (role === 'owner' && !actor.isOwner) throw new ForbiddenException('Only owner can create owners');
     const hash = await bcrypt.hash(String(dto.password), 10);
+    // permissionLevel always derives from role unless the actor is the owner.
+    // This closes the escalation hole where a manager could create an
+    // employee row carrying permissionLevel 100.
     const user = await this.prisma.user.create({
       data: {
         fullName: dto.fullName ?? username,
         username,
         passwordHash: hash,
         role,
-        permissionLevel: dto.permissionLevel ?? level,
+        permissionLevel: actor.isOwner && dto.permissionLevel !== undefined ? dto.permissionLevel : level,
         isActive: dto.isActive ?? true,
         forcePasswordChange: dto.forcePasswordChange ?? false,
         createdByUserId: actor.sub,
@@ -46,6 +47,11 @@ export class UsersService {
     if (!target) throw new NotFoundException('User not found');
     if (target.isOwner && !actor.isOwner) throw new ForbiddenException('Only owner can edit owners');
     if (dto.role === 'owner' && !actor.isOwner) throw new ForbiddenException('Only owner can grant owner');
+    // Role and level changes are owner-only: managers may edit names, active
+    // flags and force-password flags, but can never escalate anyone (or self).
+    if ((dto.role !== undefined || dto.permissionLevel !== undefined) && !actor.isOwner) {
+      throw new ForbiddenException('Only owner can change roles');
+    }
     const before = { ...target, passwordHash: undefined };
     const data: any = {};
     if (dto.fullName !== undefined) data.fullName = dto.fullName;

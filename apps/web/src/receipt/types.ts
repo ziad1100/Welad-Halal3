@@ -25,6 +25,10 @@ export interface ReceiptData {
   paymentMethod?: string;
   /** Delivery fee — printed only when > 0 (pickup orders omit the line entirely). */
   deliveryFee?: number;
+  /** Cash tendered (from the saved payment row, never the cart). */
+  amountPaid?: number;
+  /** Change due back. */
+  change?: number;
   lines: ReceiptLine[];
   totalItems: number;
   subtotal: number;
@@ -117,6 +121,7 @@ function arTime(d: Date): string {
 /** Map a saved local-backend order onto receipt data. Totals copied verbatim. */
 export function orderToReceipt(order: any, isCopy = false, opts?: { storePhone?: string }): ReceiptData {
   const d = new Date(order.createdAt);
+  const pay = (order.payments || [])[0];
   return {
     invoiceNumber: String(order.reference ?? ''),
     orderNumber: String(order.reference ?? ''),
@@ -141,6 +146,8 @@ export function orderToReceipt(order: any, isCopy = false, opts?: { storePhone?:
     tax: 0,
     total: Number(order.total ?? 0),
     isCopy,
+    amountPaid: pay ? Number(pay.amount) : undefined,
+    change: pay ? Number(pay.change) : undefined,
     storePhone: opts?.storePhone || undefined,
   };
 }

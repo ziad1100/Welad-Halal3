@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cancelOrder, getOrder, listOrders } from '../../services/api/orders.api';
+import { settingsApi } from '../../services/api/erp.api';
+import { ManagerGate } from '../../components/pos/ManagerGate';
 import { useCart } from '../../store/cartStore';
 import { StatusBadge, OrderTypeLabel, Modal } from '../../components/shared/ui';
 import { SearchableSelect } from '../../components/shared/SearchableSelect';
@@ -51,6 +53,15 @@ export function OrdersBoard({ initialTab = 'log' }: { initialTab?: 'log' | 'pend
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [threshold, setThreshold] = useState(500);
+  const [showMgr, setShowMgr] = useState<null | { order: any }>(null);
+
+  useEffect(() => {
+    settingsApi.all().then((rows: any[]) => {
+      const v = Number((rows || []).find((r: any) => r.key === 'return_approval_threshold')?.value ?? 500);
+      if (Number.isFinite(v) && v >= 0) setThreshold(v);
+    }).catch(() => {});
+  }, []);
 
   async function load() {
     try {
@@ -125,11 +136,12 @@ export function OrdersBoard({ initialTab = 'log' }: { initialTab?: 'log' | 'pend
     if (!ok) setErr(`${ReceiptPrinterService.lastError} — (إعادة المحاولة متاحة)`);
   }
 
-  async function requestReturn(o: any) {
+  async function requestReturn(o: any, approvalToken?: string) {
     if (busy) return;
+    if (Number(o.total) > threshold && !approvalToken) { setShowMgr({ order: o }); return; }
     setErr(''); setBusy(true);
     try {
-      await cancelOrder(o.id);
+      await cancelOrder(o.id, approvalToken);
       const ok = await ReceiptPrinterService.printReceipt(orderToReturnReceipt(o, false));
       if (!ok) setErr(`${ReceiptPrinterService.lastError} — اكتمل المرتجع (طباعة يدوية)`);
       else setMsg(`تم إرجاع الطلب ${o.reference} — طُبع إيصال مرتجع`);
@@ -212,6 +224,9 @@ export function OrdersBoard({ initialTab = 'log' }: { initialTab?: 'log' | 'pend
             <span>العميل: {detail.customer?.name || 'عميل نقدي'}</span>
             <span>الإجمالي: <b>{Number(detail.total).toFixed(2)}</b></span>
             <StatusBadge status={detail.status} />
+            {detail.status === 'confirmed' && Number(detail.total) > threshold && (
+              <span style={{ fontSize: 12 }}>يتطلب اعتماد مدير فوق {threshold} ج.م</span>
+            )}
           </div>
           <div className="ktable-wrap"><table className="ktable">
             <thead><tr><th>الصنف</th><th>الكمية</th><th>سعر الوحدة (تاريخي)</th><th>الإجمالي</th></tr></thead>
@@ -219,6 +234,8 @@ export function OrdersBoard({ initialTab = 'log' }: { initialTab?: 'log' | 'pend
           </table></div>
         </Modal>
       )}
+      {showMgr && <ManagerGate title="اعتماد مرتجع" onClose={() => setShowMgr(null)}
+        onApproved={(token) => { const o = showMgr.order; setShowMgr(null); void requestReturn(o, token); }} />}
     </div>
   );
 }

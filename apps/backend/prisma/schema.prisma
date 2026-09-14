@@ -237,6 +237,20 @@ model Order {
   updatedAt      DateTime      @updatedAt
   items          OrderItem[]
   ratings        OrderRating[]
+  payments       Payment[]
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  orderId     String
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method      PaymentMethod @default(cash)
+  amount      Float         @default(0)
+  change      Float         @default(0)
+  createdById String?
+  createdAt   DateTime      @default(now())
+
+  @@index([orderId])
 }
 
 model OrderItem {

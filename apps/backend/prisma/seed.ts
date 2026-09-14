@@ -170,6 +170,7 @@ async function main() {
     { key: 'cash_discrepancy_threshold', value: '20' },
     { key: 'loyalty_points_rate', value: '1' },
     { key: 'return_approval_threshold', value: '500' },
+    { key: 'discount_approval_threshold', value: '200' },
   ];
   for (const s of settings) {
     await prisma.systemSetting.upsert({

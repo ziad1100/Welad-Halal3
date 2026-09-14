@@ -8,3 +8,7 @@ export async function meApi() {
   const { data } = await api.get('/auth/me');
   return data;
 }
+export async function approveApi(username: string, password: string) {
+  const { data } = await api.post('/auth/approve', { username, password });
+  return data as { approvalToken: string; manager: any };
+}

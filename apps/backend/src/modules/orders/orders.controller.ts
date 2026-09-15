@@ -27,6 +27,16 @@ export class OrdersController {
     return this.orders.hold(req.user.sub, dto);
   }
 
+  @Post(':id/resume')
+  resume(@Req() req: any, @Param('id') id: string) {
+    return this.orders.resume(req.user.sub, id);
+  }
+
+  @Post(':id/return')
+  returnOrder(@Req() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.orders.returnOrder(req.user.sub, id, dto ?? {});
+  }
+
   @Post(':id/cancel')
   cancel(@Req() req: any, @Param('id') id: string) {
     return this.orders.cancel(req.user.sub, id);

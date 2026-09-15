@@ -34,6 +34,7 @@ export function ModuleMenuBar() {
       {isStaff && <Link to="/reports" style={{ color: 'var(--table-header-text)' }}>{t('nav.reports')}</Link>}
       {isStaff && <Link to="/hr" style={{ color: 'var(--table-header-text)' }}>{t('nav.hr')}</Link>}
       {isStaff && <Link to="/admin" style={{ color: 'var(--table-header-text)' }}>{t('nav.admin')}</Link>}
+      <Link to="/printing" style={{ color: 'var(--table-header-text)' }}>{t('nav.printing')}</Link>
       <Link to="/help" style={{ color: 'var(--table-header-text)' }}>{t('nav.help')}</Link>
       <span style={{ flex: 1 }} />
       <button className="wh-btn app-header-buttons" onClick={() => lang('ar')}>عربي</button>

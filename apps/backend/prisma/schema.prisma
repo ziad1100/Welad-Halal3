@@ -220,10 +220,12 @@ model Order {
   type           OrderType     @default(pickup)
   status         OrderStatus   @default(pending)
   paymentMethod  PaymentMethod @default(cash)
-  subtotal       Float         @default(0)
-  discountTotal  Float         @default(0)
-  deliveryFee    Float         @default(0)
-  total          Float         @default(0)
+  subtotal Float @default(0)
+  discountTotal Float @default(0)
+  deliveryFee Float @default(0)
+  total Float @default(0)
+  paidAmount Float?
+  changeAmount Float?
   userId         String
   user           User          @relation(fields: [userId], references: [id])
   branchId       String

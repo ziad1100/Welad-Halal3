@@ -16,8 +16,8 @@ export function SearchableSelect({ options, value, onChange, placeholder }: { op
     return options.filter((o) => o.label.toLowerCase().includes(s));
   }, [q, options]);
   return (
-    <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
-      <input placeholder={placeholder ?? t('auth.searchPh')} value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 110 }} />
+    <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', maxWidth: '100%' }}>
+      <input placeholder={placeholder ?? t('auth.searchPh')} value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 110, maxWidth: '100%' }} />
       <select value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">—</option>
         {filtered.map((o) => (

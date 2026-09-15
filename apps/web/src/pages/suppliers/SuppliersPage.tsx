@@ -20,7 +20,7 @@ export function SuppliersPage() {
   return (
     <div style={{ padding: 8 }}>
       <h3>{t('suppliers.title')}</h3>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="">{t('common.all')}</option><option value="supplier">{t('common.supplier')}</option>
           <option value="customer">{t('common.customer')}</option><option value="both">{t('common.both')}</option>
@@ -34,6 +34,7 @@ export function SuppliersPage() {
         <button className="wh-btn wh-btn-primary" onClick={add}>{t('common.add')}</button>
       </div>
       <div className="printable-content">
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('common.name')}</th><th>{t('common.type')}</th><th>{t('common.phone')}</th><th>{t('common.points')}</th><th>{t('common.credit')}</th></tr></thead>
         <tbody>
@@ -44,6 +45,7 @@ export function SuppliersPage() {
           ))}
         </tbody>
       </table>
+      </div>
       </div>
     </div>
   );

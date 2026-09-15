@@ -15,37 +15,42 @@ function fmtArDate(v: any) {
   }
 }
 
-export const ReturnReceiptView = forwardRef<HTMLDivElement, { order: any; storeSettings?: any }>(
-  function ReturnReceiptView({ order, storeSettings }, ref) {
+export const ReturnReceiptView = forwardRef<HTMLDivElement, { order: any; storeSettings?: any; paper?: '58mm' | '80mm' }>(
+  function ReturnReceiptView({ order, storeSettings, paper = '80mm' }, ref) {
     if (!order) return null;
+    const narrow = paper === '58mm';
+    const width = narrow ? '58mm' : '80mm';
+    const fs = narrow ? 11 : 13;
     const name = storeSettings?.storeName ?? 'ولاد حلال';
+    const cashier = order.user?.username ?? order.user?.fullName ?? order.cashierName ?? '';
+    const rule = narrow ? '--------------------------' : '--------------------------------';
     return (
       <div
         ref={ref}
         className="receipt-print-area"
-        style={{ width: '80mm', fontFamily: 'Tahoma', textAlign: 'center', direction: 'rtl', color: '#000', background: '#fff' }}
+        style={{ width, fontFamily: 'Tahoma', textAlign: 'center', direction: 'rtl', color: '#000', background: '#fff', fontSize: fs, lineHeight: 1.5, padding: '2mm' }}
       >
-        <h2 style={{ margin: 0, fontWeight: 'bold' }}>{name}</h2>
+        <div style={{ fontWeight: 'bold', fontSize: fs + 4 }}>{name}</div>
         <div style={{ border: '2px solid #000', display: 'inline-block', padding: '2px 12px', margin: '6px 0', fontWeight: 'bold' }}>
-          إيصال مرتجع
+          مرتجع RETURN
         </div>
-        <div>--------------------------------</div>
-        <div>طلب #{order.reference ?? order.id}</div>
+        <div>{rule}</div>
+        <div>رقم الفاتورة الأصلية: #{order.reference ?? order.id}</div>
         <div>{fmtArDate(order.createdAt)}</div>
-        <div>--------------------------------</div>
-        <div>العميل: {order.customer?.name ?? order.customerName ?? 'عميل'}</div>
+        {cashier ? <div>الكاشير: {cashier}</div> : null}
         <div>الحالة: مرتجع</div>
-        <div>--------------------------------</div>
+        <div>{rule}</div>
         <div style={{ textAlign: 'right' }}>
           {(order.items ?? order.lines ?? []).map((it: any, i: number) => (
-            <div key={it.id ?? i} className="receipt-line" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>-{Math.abs(it.qty ?? it.quantity ?? 1)}x {it.productName ?? it.name} (مرتجع)</span>
-              <span>{Number(it.lineTotal ?? 0).toFixed(2)} EGP</span>
+            <div key={it.id ?? i} className="receipt-line" style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+              <span style={{ overflowWrap: 'anywhere' }}>-{Math.abs(it.qty ?? it.quantity ?? 1)}x {it.productName ?? it.name} (مرتجع)</span>
+              <span style={{ whiteSpace: 'nowrap' }}>{Number(it.lineTotal ?? 0).toFixed(2)} EGP</span>
             </div>
           ))}
         </div>
-        <div>--------------------------------</div>
-        <div style={{ fontWeight: 'bold', fontSize: 20 }}>الإجمالي المرتجع: {Number(order.total ?? 0).toFixed(2)} EGP</div>
+        <div>{rule}</div>
+        <div style={{ fontWeight: 'bold', fontSize: fs + 4 }}>المبلغ المسترد: {Number(order.total ?? 0).toFixed(2)} EGP</div>
+        {order.returnReason && <div>سبب الإرجاع: {order.returnReason}</div>}
         <div>شكراً لتسوقك من ولاد حلال</div>
         <div>Thank you for shopping with Welad Halal!</div>
         <div>• • •</div>

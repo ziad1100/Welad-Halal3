@@ -38,6 +38,7 @@ export function PurchasesPage() {
         <input type="number" value={cost} onChange={(e) => setCost(Number(e.target.value))} style={{ width: 90 }} placeholder={t('common.cost')} />
         <button className="wh-btn wh-btn-primary" onClick={create}>{t('purchases.create')}</button>
       </div>
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('common.supplier')}</th><th>{t('common.total')}</th><th>{t('purchases.received')}</th><th></th></tr></thead>
         <tbody>
@@ -49,6 +50,7 @@ export function PurchasesPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -16,12 +16,13 @@ export function InventoryPage() {
   const locale = i18n.language === 'en' ? 'en-US' : 'ar-EG';
   return (
     <div style={{ padding: 8 }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <h3>{t('common.invTitle')}</h3>
         <button className="wh-btn wh-btn-primary" onClick={() => setShowNew(true)}>{t('common.addItem')}</button>
         <button className="wh-btn" onClick={() => window.print()}>{t('common.printReport')}</button>
       </div>
       <div className="printable-content">
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('common.liveStock')}</th><th>{t('common.quantity')}</th><th>{t('common.avgCost')}</th><th>{t('common.value')}</th></tr></thead>
         <tbody>
@@ -33,7 +34,9 @@ export function InventoryPage() {
           ))}
         </tbody>
       </table>
+      </div>
       <h3>{t('common.movements')}</h3>
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('common.moveType')}</th><th>{t('common.change')}</th><th>{t('common.date')}</th></tr></thead>
         <tbody>
@@ -42,6 +45,7 @@ export function InventoryPage() {
           ))}
         </tbody>
       </table>
+      </div>
       </div>
       {showNew && <NewProductModal prefillBarcode={undefined} onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); load(); }} />}
     </div>

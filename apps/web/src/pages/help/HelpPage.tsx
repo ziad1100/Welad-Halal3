@@ -63,14 +63,20 @@ export function HelpPage() {
       </Section>
       <Section title={ar ? 'إعداد الطابعة' : 'Printer Setup'}>
         {ar ? (
-          <p>من الإدارة ← الإعدادات ← طابعة الإيصالات ← اضغط 'اكتشاف الأجهزة' واختر طابعتك من القائمة التي يعرضها المتصفح. إذا لم تختر طابعة، ستتم الطباعة عبر نافذة الطباعة العادية في المتصفح.</p>
+          <div>
+            <p>من الإدارة ← الإعدادات ← طابعة الإيصالات ← اضغط 'اكتشاف الأجهزة' واختر طابعتك من القائمة التي يعرضها المتصفح. إذا لم تختر طابعة، ستتم الطباعة عبر نافذة الطباعة العادية في المتصفح.</p>
+            <p>صفحة 'مركز الطباعة' تتيح معاينة الإيصال واختيار الورق (58/80مم) وعدد النسخ والطباعة التجريبية وإعادة طباعة الفواتير السابقة.</p>
+          </div>
         ) : (
-          <p>From Admin → Settings → Receipt printer → 'Discover devices' and pick your printer from the browser list. Without a printer, the normal browser print dialog is used.</p>
+          <div>
+            <p>From Admin → Settings → Receipt printer → 'Discover devices' and pick your printer from the browser list. Without a printer, the normal browser print dialog is used.</p>
+            <p>The 'Printing Center' page offers receipt preview, paper selection (58/80mm), copies, test print, and reprinting past invoices.</p>
+          </div>
         )}
       </Section>
       <Section title={ar ? 'اللغة والمظهر' : 'Language & Theme'}>
         {ar ? (
-          <p>زر اللغة يبدّل كل نصوص الواجهة (القوائم والأزرار والجداول) لكن الإيصالات تطبع بالعربية دائمًا regardless. زر القمر/الشمس يبدّل الوضع الداكن ويُحفظ عبر الجلسات.</p>
+          <p>زر اللغة يبدّل كل نصوص الواجهة (القوائم والأزرار والجداول) لكن الإيصالات تطبع بالعربية دائمًا. زر القمر/الشمس يبدّل الوضع الداكن ويُحفظ عبر الجلسات.</p>
         ) : (
           <p>The language toggle switches all UI text but receipts always print in Arabic. The moon/sun toggle switches dark mode and persists across sessions.</p>
         )}

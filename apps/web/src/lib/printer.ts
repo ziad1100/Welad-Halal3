@@ -81,3 +81,26 @@ export function toast(msg: string) {
   // lightweight toast hook point — falls back to alert-free inline event
   window.dispatchEvent(new CustomEvent('wh-toast', { detail: msg }));
 }
+
+// Plain-text receipt for the desktop shell bridge (firmware-safe latin lines;
+// full Arabic receipt is always available via the HTML print path).
+export function buildTextReceipt(order: any): string {
+  const L: string[] = [];
+  L.push('WELAD HALAL');
+  L.push('--------------------------------');
+  L.push(`Order #${order?.reference ?? order?.id ?? ''}`);
+  L.push(`Date: ${order?.createdAt ?? ''}`);
+  if (order?.user?.username) L.push(`Cashier: ${order.user.username}`);
+  for (const it of order?.items ?? order?.lines ?? []) {
+    const qty = it.qty ?? it.quantity ?? 1;
+    const amt = Number(it.lineTotal ?? (it.price ?? 0) * qty).toFixed(2);
+    L.push(`${qty}x ${it.productName ?? it.name ?? 'item'}  ${amt}`);
+  }
+  L.push('--------------------------------');
+  if (Number(order?.discountTotal ?? 0) > 0) L.push(`Discount: ${Number(order.discountTotal).toFixed(2)}`);
+  L.push(`TOTAL: ${Number(order?.total ?? 0).toFixed(2)} EGP`);
+  if (order?.paidAmount != null) L.push(`Paid: ${Number(order.paidAmount).toFixed(2)}`);
+  if (Number(order?.changeAmount ?? 0) > 0) L.push(`Change: ${Number(order.changeAmount).toFixed(2)}`);
+  L.push('Thank you - Shokran!');
+  return L.join('\n');
+}

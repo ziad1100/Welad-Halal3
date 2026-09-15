@@ -19,8 +19,8 @@ export function ShiftStartModal({ role, onStart, onSkip }: { role: string; onSta
     }
   }
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'grid', placeItems: 'center' }}>
-      <div className="wh-modal" style={{ width: 420 }}>
+    <div className="wh-overlay" style={{ zIndex: 100, background: 'rgba(0,0,0,0.5)' }}>
+      <div className="wh-modal" style={{ width: 'min(420px, calc(100vw - 24px))', maxHeight: '90vh', overflowY: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>{t('shift.startTitle')}</h3>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('shift.hint')}</p>
         <label>{t('shift.amount')}</label>
@@ -50,8 +50,8 @@ export function ShiftEndModal({ onSubmit, onClose }: { onSubmit: (cash: number) 
     }
   }
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'grid', placeItems: 'center' }}>
-      <div className="wh-modal" style={{ width: 440 }}>
+    <div className="wh-overlay" style={{ zIndex: 100, background: 'rgba(0,0,0,0.5)' }}>
+      <div className="wh-modal" style={{ width: 'min(440px, calc(100vw - 24px))', maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <strong>{t('shift.end')}</strong>
           <button className="wh-btn" onClick={onClose}>X</button>

@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CacheService } from '../../common/cache/cache.service';
 import { computeDiscountAmount, discountError } from '../../common/utils/discount';
 
 interface ConfirmLine {
@@ -11,7 +12,21 @@ interface ConfirmLine {
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
+
+  private async bustBarcodeCache(productIds: string[]) {
+    for (const pid of productIds) {
+      const p = await this.prisma.product.findUnique({ where: { id: pid }, include: { units: true } });
+      if (!p) continue;
+      if (p.barcode) await this.cache.del(`bc:${p.barcode}`).catch(() => undefined);
+      for (const u of p.units) {
+        if (u.barcode) await this.cache.del(`bc:${u.barcode}`).catch(() => undefined);
+      }
+    }
+  }
 
   list(status?: string) {
     return this.prisma.order.findMany({
@@ -33,7 +48,7 @@ export class OrdersService {
   }
 
   // F12 confirm — authoritative pricing, transactional
-  async confirm(userId: string, dto: { lines: ConfirmLine[]; customerId?: string; type?: 'pickup' | 'delivery'; paymentMethod?: 'cash' | 'card' | 'mixed'; deliveryFee?: number; discountCode?: string }) {
+  async confirm(userId: string, dto: { lines: ConfirmLine[]; customerId?: string; type?: 'pickup' | 'delivery'; paymentMethod?: 'cash' | 'card' | 'mixed'; deliveryFee?: number; discountCode?: string; paid?: number; cashAmount?: number; cardAmount?: number }) {
     if (!dto.lines?.length) throw new BadRequestException('Empty cart');
     const branchId = await this.resolveBranch();
 
@@ -69,6 +84,30 @@ export class OrdersService {
 
     const deliveryFee = dto.type === 'delivery' ? Number(dto.deliveryFee ?? 0) : 0;
     const total = Math.max(0, subtotal - discountTotal + deliveryFee);
+    const method = dto.paymentMethod ?? 'cash';
+
+    // payment validation (server-side, never trust frontend totals)
+    let paidAmount: number | null = null;
+    let changeAmount = 0;
+    if (method === 'cash') {
+      paidAmount = Number(dto.paid ?? total);
+      if (Number.isNaN(paidAmount) || paidAmount < total)
+        throw new BadRequestException('Payment amount is insufficient');
+      changeAmount = paidAmount - total;
+    } else if (method === 'mixed') {
+      const cash = Number(dto.cashAmount ?? 0);
+      const card = Number(dto.cardAmount ?? 0);
+      if (Number.isNaN(cash) || Number.isNaN(card) || cash < 0 || card < 0)
+        throw new BadRequestException('Invalid mixed payment amounts');
+      if (Math.abs(cash + card - total) > 0.009)
+        throw new BadRequestException('Cash + card must equal the order total');
+      paidAmount = cash + card;
+      changeAmount = 0;
+    } else {
+      // card: exact total, no change
+      paidAmount = total;
+      changeAmount = 0;
+    }
     const reference = `WH-${Date.now().toString(36).toUpperCase()}`;
 
     return this.prisma.$transaction(async (tx) => {
@@ -83,11 +122,13 @@ export class OrdersService {
           reference,
           type: dto.type ?? 'pickup',
           status: 'confirmed',
-          paymentMethod: dto.paymentMethod ?? 'cash',
+          paymentMethod: method,
           subtotal,
           discountTotal,
           deliveryFee,
           total,
+          paidAmount,
+          changeAmount,
           userId,
           branchId,
           customerId: dto.customerId ?? null,
@@ -114,6 +155,10 @@ export class OrdersService {
       }
       if (discountCodeId) await tx.discountCode.update({ where: { id: discountCodeId }, data: { usedCount: { increment: 1 } } });
       return tx.order.findUnique({ where: { id: order.id }, include: { items: true } });
+    }).then(async (order) => {
+      await this.prisma.auditLog.create({ data: { userId, action: 'order.sale', entity: 'Order', entityId: order!.id, after: { total: order!.total } as any } });
+      await this.bustBarcodeCache(resolved.map((r) => r.product.id));
+      return order;
     });
   }
 
@@ -164,6 +209,41 @@ export class OrdersService {
       include: { items: true },
     });
     return order;
+  }
+
+  // Resume a held order: return its lines for the cart and void the hold (no stock touched)
+  async resume(userId: string, id: string) {
+    const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.status !== 'held') throw new BadRequestException('Only held orders can be resumed');
+    await this.prisma.order.update({ where: { id }, data: { status: 'cancelled' } });
+    await this.prisma.auditLog.create({ data: { userId, action: 'order.resume', entity: 'Order', entityId: id } });
+    return order;
+  }
+
+  // Return: mark returned, restock, audit with reason
+  async returnOrder(actorId: string, id: string, dto: { items?: { productId: string; qty: number }[]; reason?: string }) {
+    const order = await this.prisma.order.findUnique({ where: { id }, include: { items: true } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.status !== 'confirmed') throw new BadRequestException('Only confirmed orders can be returned');
+    const toReturn = dto.items?.length
+      ? dto.items
+      : order.items.map((i) => ({ productId: i.productId, qty: i.qty }));
+    let refund = 0;
+    await this.prisma.$transaction(async (tx) => {
+      for (const r of toReturn) {
+        const line = order.items.find((i) => i.productId === r.productId);
+        if (!line || r.qty <= 0 || r.qty > line.qty) throw new BadRequestException('Invalid return quantity');
+        refund += Number(line.unitPrice) * r.qty;
+        const inv = await tx.inventory.findUnique({ where: { productId_branchId: { productId: r.productId, branchId: order.branchId } } });
+        if (inv) await tx.inventory.update({ where: { id: inv.id }, data: { quantity: inv.quantity + r.qty } });
+        await tx.stockMovement.create({ data: { productId: r.productId, branchId: order.branchId, type: 'return_in', qtyDelta: r.qty, refId: order.id, note: dto.reason ?? 'return' } });
+      }
+      await tx.order.update({ where: { id }, data: { status: 'returned' } });
+    });
+    await this.prisma.auditLog.create({ data: { userId: actorId, action: 'order.return', entity: 'Order', entityId: id, after: { refund, reason: dto.reason ?? null } as any } });
+    await this.bustBarcodeCache(toReturn.map((r) => r.productId));
+    return this.get(id);
   }
 
   async cancel(actorId: string, id: string) {

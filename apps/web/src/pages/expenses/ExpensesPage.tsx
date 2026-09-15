@@ -17,11 +17,12 @@ export function ExpensesPage() {
   return (
     <div style={{ padding: 8 }}>
       <h3>{t('common.expTitle')}</h3>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         <input placeholder={t('common.item')} value={cat} onChange={(e) => setCat(e.target.value)} />
         <input type="number" placeholder={t('common.amount')} value={amount} onChange={(e) => setAmount(Number(e.target.value))} style={{ width: 110 }} />
         <button className="wh-btn wh-btn-primary" onClick={add}>{t('common.addExpense')}</button>
       </div>
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('common.item')}</th><th>{t('common.amount')}</th><th>{t('common.note')}</th><th>{t('common.date')}</th></tr></thead>
         <tbody>
@@ -33,6 +34,7 @@ export function ExpensesPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

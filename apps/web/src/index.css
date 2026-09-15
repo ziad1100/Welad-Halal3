@@ -97,8 +97,14 @@ button.wh-btn:active {
   border-bottom-color: #fff; border-right-color: #fff;
 }
 table.wh-table { border-collapse: collapse; width: 100%; background: var(--bg-card); color: var(--text-primary); }
-table.wh-table th, table.wh-table td { border: 1px solid var(--border-color); padding: 4px 6px; font-size: 13px; color: var(--text-primary); }
-table.wh-table thead th { background: var(--table-header-bg); color: var(--table-header-text); }
+table.wh-table th, table.wh-table td {
+  border: 1px solid var(--border-color); padding: 4px 6px; font-size: 13px; color: var(--text-primary);
+  overflow-wrap: anywhere; word-break: break-word;
+}
+table.wh-table thead th { background: var(--table-header-bg); color: var(--table-header-text); white-space: nowrap; }
+/* local scroll container for wide ERP tables — page itself never scrolls sideways */
+.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll > table.wh-table { min-width: 640px; }
 table.wh-table tbody tr:nth-child(even) { background: var(--table-row-alt); }
 tr.wh-active { background: var(--wh-cart-active) !important; }
 input, select, textarea { color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-color); }
@@ -107,14 +113,27 @@ input.wh-required { background: var(--wh-required); }
 .badge-danger { color: var(--danger-color); }
 .badge-warning { color: var(--warning-color); }
 .barcode-field { background: var(--wh-barcode); color: #fff; font-family: monospace; }
-.wh-header { background: var(--wh-header); color: #fff; padding: 8px 12px; display: flex; gap: 12px; align-items: center; }
-.wh-total-box { background: var(--wh-total); color: #fff; font-weight: bold; padding: 12px; text-align: center; font-size: 20px; }
-.wh-modal { background: var(--wh-modal); border: 2px outset #fff; padding: 16px; }
+.wh-header { background: var(--wh-header); color: #fff; padding: 8px 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.wh-subheader { max-width: 100%; }
+.wh-total-box { background: var(--wh-total); color: #fff; font-weight: bold; padding: 12px; text-align: center; font-size: clamp(16px, 4vw, 20px); overflow-wrap: anywhere; }
+.wh-modal { background: var(--wh-modal); border: 2px outset #fff; padding: 16px; max-width: calc(100vw - 24px); }
+/* modal/popover overlays scroll internally and never clip on small screens */
+.wh-overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 12px; overflow-y: auto; background: rgba(0,0,0,0.4); }
 .layout { display: flex; flex-direction: column; height: 100%; }
 .cashier-grid { display: grid; grid-template-columns: 1fr 280px; gap: 8px; padding: 8px; flex: 1; min-height: 0; }
 .bottom-bar { display: flex; gap: 4px; padding: 6px; background: #d8d4c0; flex-wrap: wrap; }
 [data-theme="dark"] .bottom-bar { background: #1e1e1e; }
 @media (max-width: 1024px) { .cashier-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .cashier-grid, .bottom-bar { padding: 4px; }
+  table.wh-table th, table.wh-table td { padding: 2px 4px; font-size: 12px; }
+  .wh-modal { padding: 10px; }
+}
+@media print {
+  .table-scroll { overflow: visible; }
+  .table-scroll > table.wh-table { min-width: 0; }
+  .printing-grid { grid-template-columns: 1fr !important; }
+}
 /* Part 1.2: report print scoping — only .printable-content survives */
 @media print {
   nav, .app-toolbar, .app-header-buttons, .sidebar, .bottom-bar, .wh-header, button:not(.receipt-line) {

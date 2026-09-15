@@ -59,22 +59,18 @@ export class ProductsService {
     throw new NotFoundException('Barcode not found');
   }
 
-  async create(dto: any) {
-    const { units, initialQuantity, ...rest } = dto;
+  async create(actorId: string, dto: any) {
+    const { units, initialQuantity, branchId, unit: _unit, retailPrice: _retail, ...rest } = dto;
     const name = String(rest.name ?? '').trim();
     if (!name) throw new BadRequestException('name required');
-    const price = Number(rest.basePrice ?? rest.retailPrice ?? 0);
+    const price = Number(rest.basePrice ?? dto.retailPrice ?? 0);
     if (Number.isNaN(price) || price < 0) throw new BadRequestException('price must be >= 0');
     if (rest.barcode) {
       const dup = await this.prisma.product.findFirst({ where: { barcode: String(rest.barcode).trim() } });
       if (dup) throw new BadRequestException('barcode already exists');
     }
-    // map spec fields: categoryId/unit/retailPrice/description -> schema fields
-    const data: any = { ...rest, name, basePrice: price };
-    if (dto.retailPrice !== undefined && dto.basePrice === undefined) data.basePrice = Number(dto.retailPrice);
-    if (dto.unit && !units) {
-      // single default unit from spec unit string
-    }
+    const { basePrice: _b, ...modelFields } = rest;
+    const data: any = { ...modelFields, name, basePrice: price };
     const p = await this.prisma.product.create({
       data: {
         ...data,
@@ -102,13 +98,24 @@ export class ProductsService {
       });
     }
     if (p.barcode) await this.cache.del(`bc:${p.barcode}`);
+    await this.prisma.auditLog.create({ data: { userId: actorId, action: 'product.create', entity: 'Product', entityId: p.id, after: { name: p.name } as any } });
     return p;
   }
 
-  async update(id: string, dto: any) {
+  async update(actorId: string, id: string, dto: any) {
     const { units: _u, ...rest } = dto;
+    const before = await this.prisma.product.findUnique({ where: { id } });
     const p = await this.prisma.product.update({ where: { id }, data: rest });
     if (p.barcode) await this.cache.del(`bc:${p.barcode}`);
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorId,
+        action: before && Number(before.basePrice) !== Number(p.basePrice) ? 'product.price_change' : 'product.update',
+        entity: 'Product',
+        entityId: id,
+        after: { basePrice: p.basePrice } as any,
+      },
+    });
     return p;
   }
 }

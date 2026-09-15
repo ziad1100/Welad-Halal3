@@ -18,7 +18,7 @@ export function HRPage() {
   return (
     <div style={{ padding: 8 }}>
       <h3>{t('hr.title')}</h3>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         <select value={userId} onChange={(e) => setUserId(e.target.value)}>
           <option value="">{t('hr.user')}...</option>
           {users.map((u) => <option key={u.id} value={u.id}>{u.username}</option>)}
@@ -28,11 +28,14 @@ export function HRPage() {
         <button className="wh-btn wh-btn-primary" onClick={async () => { await shiftsApi.open(openCash); load(); }}>{t('hr.openShift')}</button>
       </div>
       <h4>{t('hr.employees')}</h4>
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('hr.user')}</th><th>{t('hr.job')}</th><th>{t('hr.phone')}</th></tr></thead>
         <tbody>{emps.map((e) => <tr key={e.id} style={{ background: 'var(--wh-row)' }}><td>{e.user?.username}</td><td>{e.position ?? ''}</td><td>{e.phone ?? ''}</td></tr>)}</tbody>
       </table>
+      </div>
       <h4>{t('hr.shifts')}</h4>
+      <div className="table-scroll">
       <table className="wh-table">
         <thead><tr><th>{t('hr.employee')}</th><th>{t('hr.status')}</th><th>{t('hr.opening')}</th><th>{t('hr.closing')}</th><th>{t('hr.expected')}</th><th>{t('hr.diff')}</th><th></th></tr></thead>
         <tbody>
@@ -51,6 +54,7 @@ export function HRPage() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

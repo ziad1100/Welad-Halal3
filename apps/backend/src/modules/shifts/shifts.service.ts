@@ -39,9 +39,11 @@ export class ShiftsService {
     const s = await this.prisma.shift.findUnique({ where: { id } });
     if (!s) throw new NotFoundException('Shift not found');
     if (s.status === 'closed') throw new BadRequestException('Already closed');
-    // expected = opening + confirmed cash sales - cash refunds/returns in window
+    // expected = opening + gross cash sales (confirmed AND later-returned) - cash refunds.
+    // Returned orders count on both sides so a fully-returned sale nets to zero,
+    // matching the physical drawer (cash in, then cash out).
     const sales = await this.prisma.order.aggregate({
-      where: { branchId: s.branchId, status: 'confirmed', createdAt: { gte: s.openedAt }, paymentMethod: { in: ['cash', 'mixed'] } },
+      where: { branchId: s.branchId, status: { in: ['confirmed', 'returned'] }, createdAt: { gte: s.openedAt }, paymentMethod: { in: ['cash', 'mixed'] } },
       _sum: { total: true },
     });
     const refunds = await this.prisma.order.aggregate({

@@ -95,7 +95,7 @@ export function AdminPage() {
           {createdCreds && <span style={{ color: 'var(--success-color)' }}>{createdCreds}</span>}
         </div>
       )}
-      <table className="wh-table">
+      <div className="table-scroll"><table className="wh-table">
         <thead><tr><th>{t('common.userCol')}</th><th>{t('common.role')}</th><th>{t('common.level')}</th><th>{t('common.ownerCol')}</th><th>{t('common.active')}</th><th></th></tr></thead>
         <tbody>
           {users.map((u) => (
@@ -114,6 +114,7 @@ export function AdminPage() {
           ))}
         </tbody>
       </table>
+      </div>
       <h3>{t('admin.settings')}</h3>
       <fieldset style={{ marginBottom: 12 }}>
         <legend>{t('common.printerTitle')}</legend>
@@ -134,7 +135,7 @@ export function AdminPage() {
           </div>
         )}
       </fieldset>
-      <table className="wh-table">
+      <div className="table-scroll"><table className="wh-table">
         <thead><tr><th>{t('admin.key')}</th><th>{t('admin.value')}</th><th></th></tr></thead>
         <tbody>
           {settings.map((s) => (
@@ -146,8 +147,9 @@ export function AdminPage() {
           ))}
         </tbody>
       </table>
+      </div>
       <h3>{t('admin.audit')} (300)</h3>
-      <table className="wh-table">
+      <div className="table-scroll"><table className="wh-table">
         <thead><tr><th>{t('common.userCol')}</th><th>{t('common.action')}</th><th>{t('common.entity')}</th><th>{t('common.date')}</th></tr></thead>
         <tbody>
           {audit.slice(0, 100).map((a) => (
@@ -155,6 +157,7 @@ export function AdminPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -105,7 +105,61 @@ async function main() {
     { name: 'چيبو شيبسي', category: 'وجبات خفيفة', barcode: '6221077234567', price: 10, unit: 'قطعة' },
     { name: 'توينكيز', category: 'وجبات خفيفة', barcode: '6221077234574', price: 8, unit: 'قطعة' },
     { name: 'كورن فليكس سنو', category: 'وجبات خفيفة', barcode: '6221077234581', price: 65, unit: 'علبة' },
+    // dairy extensions
+    { name: 'عبور لاند لبن كامل الدسم 1 لتر', category: 'ألبان وأجبان', barcode: '6221011234628', price: 41, unit: 'قطعة' },
+    { name: 'بيتي لبن كامل الدسم 1 لتر', category: 'ألبان وأجبان', barcode: '6221011234635', price: 43, unit: 'قطعة' },
+    { name: 'لمار لبن خالي الدسم 1 لتر', category: 'ألبان وأجبان', barcode: '6221011234642', price: 44, unit: 'قطعة' },
+    { name: 'جهينة ميكس شوكولاتة 200 مل', category: 'ألبان وأجبان', barcode: '6221011234659', price: 14, unit: 'قطعة' },
+    { name: 'دومتي جبنة فيتا 250 جم', category: 'ألبان وأجبان', barcode: '6221011234666', price: 32, unit: 'قطعة' },
+    // beverages
+    { name: 'بيبسي 1 لتر', category: 'مياه ومشروبات', barcode: '6221044234611', price: 28, unit: 'قطعة' },
+    { name: 'سفن أب 1 لتر', category: 'مياه ومشروبات', barcode: '6221044234628', price: 28, unit: 'قطعة' },
+    { name: 'ميرندا برتقال 1 لتر', category: 'مياه ومشروبات', barcode: '6221044234635', price: 28, unit: 'قطعة' },
+    { name: 'أكوفينا مياه 600 مل', category: 'مياه ومشروبات', barcode: '6221044234642', price: 5, unit: 'قطعة' },
+    { name: 'فانتا 1 لتر', category: 'مياه ومشروبات', barcode: '6221044234659', price: 28, unit: 'قطعة' },
+    // snacks
+    { name: 'شيبسي ملح 70 جم', category: 'وجبات خفيفة', barcode: '6221077234598', price: 12, unit: 'قطعة' },
+    { name: 'تايجر جبنة 70 جم', category: 'وجبات خفيفة', barcode: '6221077234604', price: 12, unit: 'قطعة' },
+    { name: 'مولتو كرواسون شيكولاتة', category: 'وجبات خفيفة', barcode: '6221077234611', price: 10, unit: 'قطعة' },
+    { name: 'بسكو مصر بسكويت شاي', category: 'وجبات خفيفة', barcode: '6221077234628', price: 9, unit: 'علبة' },
+    { name: 'بيك رولز زعتر', category: 'وجبات خفيفة', barcode: '6221077234635', price: 11, unit: 'قطعة' },
+    // canned / dry food
+    { name: 'أمريكانا تونة قطع 170 جم', category: 'معلبات', barcode: '6221055234604', price: 48, unit: 'علبة' },
+    { name: 'صلصة طماطم مركزة 400 جم', category: 'معلبات', barcode: '6221055234611', price: 22, unit: 'علبة' },
+    { name: 'أرز أبيض فاخر 1 كجم', category: 'بقوليات وحبوب', barcode: '6221055234628', price: 38, unit: 'كجم' },
+    { name: 'مكرونة قلم 1 كجم', category: 'بقوليات وحبوب', barcode: '6221055234635', price: 28, unit: 'كجم' },
+    { name: 'سكر أبيض 1 كجم', category: 'بقوليات وحبوب', barcode: '6221055234642', price: 32, unit: 'كجم' },
+    { name: 'زيت صني 1.5 لتر', category: 'معلبات', barcode: '6221055234659', price: 95, unit: 'قطعة' },
+    { name: 'ماجي مرقة خضار 24 مكعب', category: 'معلبات', barcode: '6221055234666', price: 24, unit: 'علبة' },
+    // cleaning
+    { name: 'اريال مسحوق 1 كجم', category: 'منظفات', barcode: '6221066234598', price: 85, unit: 'علبة' },
+    { name: 'برسيل جل 1 لتر', category: 'منظفات', barcode: '6221066234604', price: 92, unit: 'قطعة' },
+    { name: 'تايد مسحوق 500 جم', category: 'منظفات', barcode: '6221066234611', price: 45, unit: 'علبة' },
+    { name: 'ديتول مطهر 500 مل', category: 'منظفات', barcode: '6221066234628', price: 60, unit: 'قطعة' },
+    { name: 'لوكس صابون 120 جم', category: 'منظفات', barcode: '6221066234635', price: 18, unit: 'قطعة' },
+    // meat & poultry (decimal kg stock)
+    { name: 'لحم بقري طازج', category: 'لحوم ودواجن', barcode: '6221022234604', price: 320, unit: 'كجم' },
+    { name: 'لحم مفروم', category: 'لحوم ودواجن', barcode: '6221022234611', price: 340, unit: 'كجم' },
+    { name: 'صدور دجاج مخلية', category: 'لحوم ودواجن', barcode: '6221022234628', price: 210, unit: 'كجم' },
+    { name: 'دجاجة كاملة', category: 'لحوم ودواجن', barcode: '6221022234635', price: 150, unit: 'قطعة' },
+    { name: 'كفتة بلدي', category: 'لحوم ودواجن', barcode: '6221022234642', price: 300, unit: 'كجم' },
+    // bakery extras
+    { name: 'فينو كورونا', category: 'مخبوزات', barcode: '6221033234598', price: 5, unit: 'قطعة' },
+    { name: 'عيش بلدي (5 أرغفة)', category: 'مخبوزات', barcode: '6221033234604', price: 5, unit: 'علبة' },
   ];
+
+  // demo suppliers (test records)
+  const suppliers = [
+    { name: 'مورد الألبان الرئيسي', type: 'supplier', phone: '01000000001' },
+    { name: 'مورد المشروبات', type: 'supplier', phone: '01000000002' },
+    { name: 'مورد المنظفات', type: 'supplier', phone: '01000000003' },
+    { name: 'مورد المواد الغذائية', type: 'supplier', phone: '01000000004' },
+    { name: 'مورد اللحوم المحلي', type: 'supplier', phone: '01000000005' },
+  ];
+  for (const s of suppliers) {
+    const existing = await prisma.party.findFirst({ where: { name: s.name } });
+    if (!existing) await prisma.party.create({ data: { name: s.name, type: s.type as any, phone: s.phone } });
+  }
 
   const branch = await prisma.branch.findFirst({ where: { id: 'branch-main' } });
   for (const p of products) {
@@ -140,7 +194,10 @@ async function main() {
       }
     });
     if (branch) {
-      const qty = 50 + Math.floor(Math.random() * 51);
+      // meat/poultry stocked in small decimal kg quantities, shelf goods 50-100
+      const qty = p.category === 'لحوم ودواجن'
+        ? Math.round((5 + Math.random() * 20) * 4) / 4
+        : 50 + Math.floor(Math.random() * 51);
       await prisma.inventory.upsert({
         where: { productId_branchId: { productId: prod.id, branchId: branch.id } },
         update: {},

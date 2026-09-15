@@ -13,6 +13,7 @@ import { ReportsPage } from './pages/reports/ReportsPage';
 import { HRPage } from './pages/hr/HRPage';
 import { AdminPage } from './pages/admin/AdminPage';
 import { HelpPage } from './pages/help/HelpPage';
+import { PrintingCenterPage } from './pages/printing/PrintingCenterPage';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { ModuleMenuBar } from './components/layout/ModuleMenuBar';
 import { BrandingHeader } from './components/layout/BrandingHeader';
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/hr" element={<ProtectedRoute minLevel={50}><Shell><HRPage /></Shell></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute minLevel={50}><Shell><AdminPage /></Shell></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute minLevel={10}><Shell><HelpPage /></Shell></ProtectedRoute>} />
+        <Route path="/printing" element={<ProtectedRoute minLevel={10}><Shell><PrintingCenterPage /></Shell></ProtectedRoute>} />
         <Route path="/change-password" element={<div style={{ padding: 16 }}>يرجى تغيير كلمة المرور (شاشة قريباً)</div>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>

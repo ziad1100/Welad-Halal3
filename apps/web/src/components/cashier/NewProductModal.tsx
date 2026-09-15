@@ -107,8 +107,8 @@ export function NewProductModal({ barcode, prefillBarcode, onClose, onSaved, onC
   ];
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50, display: 'grid', placeItems: 'center' }}>
-      <div className="wh-modal" style={{ width: 560, maxHeight: '90vh', overflow: 'auto' }}>
+    <div className="wh-overlay">
+      <div className="wh-modal" style={{ width: 'min(560px, calc(100vw - 24px))', maxHeight: '90vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <strong>{t('product.title')}</strong>
           <button className="wh-btn" onClick={onClose}>X</button>
@@ -142,7 +142,7 @@ export function NewProductModal({ barcode, prefillBarcode, onClose, onSaved, onC
         <input value={code} onChange={(e) => setCode(e.target.value)} style={{ width: '100%', marginBottom: 2, direction: 'ltr' }} />
         <div className="barcode-field" style={{ padding: 8, marginBottom: 6, direction: 'ltr', textAlign: 'left' }}>{code || '—'}</div>
         {barcodeTaken && <div style={{ color: 'var(--danger-color)', marginBottom: 6 }}>{t('product.barcodeTaken')}</div>}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
           {tabs.map((t) => (
             <button key={t.id} className="wh-btn" onClick={() => setTab(t.id)} style={tab === t.id ? { background: 'var(--bg-surface)' } : {}}>{t.label}</button>
           ))}
@@ -153,7 +153,7 @@ export function NewProductModal({ barcode, prefillBarcode, onClose, onSaved, onC
         {tab === 'units' && (
           <div>
             {units.map((u, i) => <div key={i}>{u.unitName} — {u.sellingPrice}</div>)}
-            <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+            <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
               <input placeholder={t('product.unitNamePh')} value={uName} onChange={(e) => setUName(e.target.value)} />
               <input type="number" placeholder={t('product.pricePh')} value={uPrice} onChange={(e) => setUPrice(Number(e.target.value))} style={{ width: 90 }} />
               <button className="wh-btn" onClick={() => { if (uName.trim()) { setUnits([...units, { unitName: uName.trim(), barcode: '', sellingPrice: uPrice }]); setUName(''); setUPrice(0); } }}>{t('product.addUnit')}</button>
@@ -164,7 +164,7 @@ export function NewProductModal({ barcode, prefillBarcode, onClose, onSaved, onC
         {tab === 'inventory' && <div>{t('product.openingStock')} <input type="number" value={qty} onChange={(e) => setQty(Number(e.target.value))} style={{ width: 100 }} /> {t('product.mainBranch')}</div>}
         {tab === 'options' && <div>{t('product.noOptions')}</div>}
         {err && <div style={{ color: 'var(--danger-color)', marginTop: 6 }}>{err}</div>}
-        <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
           <button className="wh-btn wh-btn-primary" onClick={save} disabled={barcodeTaken}>{t('common.save')}</button>
           <button className="wh-btn" onClick={onClose}>{t('common.cancel')}</button>
         </div>

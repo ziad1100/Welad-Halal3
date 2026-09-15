@@ -26,8 +26,8 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
-      <form onSubmit={submit} className="wh-modal" style={{ minWidth: 320 }}>
+    <div style={{ display: 'grid', placeItems: 'center', height: '100%', padding: 16 }}>
+      <form onSubmit={submit} className="wh-modal" style={{ width: 'min(360px, calc(100vw - 32px))' }}>
         <h2 style={{ marginTop: 0 }}>ولاد حلال</h2>
         <label>{t('username')}</label>
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" style={{ width: '100%', marginBottom: 8 }} />

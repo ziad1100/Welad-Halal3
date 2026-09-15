@@ -12,9 +12,12 @@ import { ExpensesPage } from './pages/expenses/ExpensesPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
 import { HRPage } from './pages/hr/HRPage';
 import { AdminPage } from './pages/admin/AdminPage';
+import { HelpPage } from './pages/help/HelpPage';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { ModuleMenuBar } from './components/layout/ModuleMenuBar';
 import { BrandingHeader } from './components/layout/BrandingHeader';
+import { ToastHost } from './components/ui/Toast';
+import { ShiftGate } from './components/shift/ShiftGate';
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -22,7 +25,8 @@ function Shell({ children }: { children: React.ReactNode }) {
       <BrandingHeader />
       <ModuleMenuBar />
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{children}</div>
-      <div style={{ fontSize: 11, color: '#666', padding: '2px 8px' }}>ولاد حلال | Welad Halal POS — اضغط لمعلومات</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '2px 8px' }}>ولاد حلال | Welad Halal POS — اضغط لمعلومات</div>
+      <ToastHost />
     </div>
   );
 }
@@ -30,6 +34,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ShiftGate />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cashier" element={<ProtectedRoute minLevel={10}><Shell><CashierPage /></Shell></ProtectedRoute>} />
@@ -43,6 +48,7 @@ export default function App() {
         <Route path="/reports" element={<ProtectedRoute minLevel={50}><Shell><ReportsPage /></Shell></ProtectedRoute>} />
         <Route path="/hr" element={<ProtectedRoute minLevel={50}><Shell><HRPage /></Shell></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute minLevel={50}><Shell><AdminPage /></Shell></ProtectedRoute>} />
+        <Route path="/help" element={<ProtectedRoute minLevel={10}><Shell><HelpPage /></Shell></ProtectedRoute>} />
         <Route path="/change-password" element={<div style={{ padding: 16 }}>يرجى تغيير كلمة المرور (شاشة قريباً)</div>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>

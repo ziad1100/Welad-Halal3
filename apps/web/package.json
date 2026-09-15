@@ -22,15 +22,16 @@
     "react-hook-form": "^7.54.0",
     "react-i18next": "^15.2.0",
     "react-router-dom": "^7.1.0",
+    "react-to-print": "^3.3.0",
     "zod": "^3.24.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/pg": "^8.11.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.1.1",
-    "@playwright/test": "^1.49.0",
-    "@types/pg": "^8.11.0",
     "pg": "^8.13.0",
     "typescript": "~5.7.3",
     "vite": "^8.0.0",

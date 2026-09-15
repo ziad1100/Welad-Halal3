@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PermissionLevelGuard } from '../../common/guards/permission-level.guard';
 import { RequireLevel } from '../../common/decorators/require-level.decorator';
@@ -8,6 +8,12 @@ import { UsersService } from './users.service';
 @Controller('api/users')
 export class UsersController {
   constructor(private users: UsersService) {}
+
+  @RequireLevel(50)
+  @Get('check-username')
+  check(@Query('username') username: string) {
+    return this.users.checkUsername(username);
+  }
 
   @RequireLevel(50)
   @Get()

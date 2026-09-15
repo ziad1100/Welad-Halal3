@@ -28,7 +28,8 @@ export const discountsApi = {
   validate: (code: string, subtotal: number) => api.get('/discounts/validate', { params: { code, subtotal } }).then((r) => r.data),
 };
 export const shiftsApi = {
-  list: () => api.get('/shifts').then((r) => r.data),
+  list: (employeeId = '') => api.get('/shifts', { params: employeeId ? { employeeId } : {} }).then((r) => r.data),
+  current: () => api.get('/shifts/current').then((r) => r.data),
   open: (openingCash: number) => api.post('/shifts/open', { openingCash }).then((r) => r.data),
   close: (id: string, closingCash: number) => api.post(`/shifts/${id}/close`, { closingCash }).then((r) => r.data),
 };
@@ -52,6 +53,7 @@ export const usersApi = {
   create: (d: any) => api.post('/users', d).then((r) => r.data),
   update: (id: string, d: any) => api.patch(`/users/${id}`, d).then((r) => r.data),
   resetPw: (id: string, newPassword: string) => api.post(`/users/${id}/reset-password`, { newPassword }).then((r) => r.data),
+  checkUsername: (username: string) => api.get('/users/check-username', { params: { username } }).then((r) => r.data),
 };
 export const inventoryApi = {
   live: () => api.get('/inventory').then((r) => r.data),

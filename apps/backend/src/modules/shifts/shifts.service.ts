@@ -5,8 +5,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class ShiftsService {
   constructor(private prisma: PrismaService) {}
 
-  list(employeeId?: string) {
-    return this.prisma.shift.findMany({ where: employeeId ? { employeeId } : {}, include: { employee: { include: { user: { select: { username: true, fullName: true } } } } }, orderBy: { openedAt: 'desc' }, take: 200 });
+  list(employeeId?: string, branchId?: string) {
+    const where: any = {};
+    if (employeeId) where.employeeId = employeeId;
+    if (branchId) where.branchId = branchId;
+    return this.prisma.shift.findMany({ where, include: { employee: { include: { user: { select: { username: true, fullName: true } } } } }, orderBy: { openedAt: 'desc' }, take: 200 });
+  }
+
+  async current(userId: string) {
+    const employee = await this.prisma.employee.findUnique({ where: { userId } });
+    if (!employee) return null;
+    return this.prisma.shift.findFirst({ where: { employeeId: employee.id, status: 'open' }, orderBy: { openedAt: 'desc' } });
   }
 
   open(userId: string) {
@@ -30,16 +39,36 @@ export class ShiftsService {
     const s = await this.prisma.shift.findUnique({ where: { id } });
     if (!s) throw new NotFoundException('Shift not found');
     if (s.status === 'closed') throw new BadRequestException('Already closed');
-    // expected = opening + confirmed cash orders since openedAt (same branch)
+    // expected = opening + confirmed cash sales - cash refunds/returns in window
     const sales = await this.prisma.order.aggregate({
       where: { branchId: s.branchId, status: 'confirmed', createdAt: { gte: s.openedAt }, paymentMethod: { in: ['cash', 'mixed'] } },
       _sum: { total: true },
     });
-    const expected = s.openingCash + (sales._sum.total ?? 0);
-    const updated = await this.prisma.shift.update({ where: { id }, data: { status: 'closed', closingCash, expectedCash: expected, closedAt: new Date() } });
+    const refunds = await this.prisma.order.aggregate({
+      where: { branchId: s.branchId, status: 'returned', createdAt: { gte: s.openedAt }, paymentMethod: { in: ['cash', 'mixed'] } },
+      _sum: { total: true },
+    });
+    const cashSales = sales._sum.total ?? 0;
+    const cashRefunds = refunds._sum.total ?? 0;
+    const expected = s.openingCash + cashSales - cashRefunds;
+    const discrepancy = closingCash - expected;
+    let updated: any;
+    try {
+      updated = await this.prisma.shift.update({
+        where: { id },
+        data: { status: 'closed', closingCash, expectedCash: expected, discrepancyAmount: discrepancy, closedAt: new Date() } as any,
+      });
+    } catch {
+      // fallback if discrepancyAmount column not yet migrated
+      updated = await this.prisma.shift.update({
+        where: { id },
+        data: { status: 'closed', closingCash, expectedCash: expected, closedAt: new Date() },
+      });
+      updated.discrepancyAmount = discrepancy;
+    }
     const threshold = Number((await this.prisma.systemSetting.findUnique({ where: { key: 'cash_discrepancy_threshold' } }))?.value ?? 20);
-    const diff = Math.abs(closingCash - expected);
+    const diff = Math.abs(discrepancy);
     await this.prisma.auditLog.create({ data: { userId: actorId, action: diff > threshold ? 'shift.discrepancy' : 'shift.close', entity: 'Shift', entityId: id, after: { closingCash, expectedCash: expected, diff } as any } });
-    return { ...updated, discrepancy: closingCash - expected, alert: diff > threshold };
+    return { ...updated, discrepancy, alert: diff > threshold };
   }
 }

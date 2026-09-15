@@ -342,6 +342,7 @@ model Shift {
   openingCash Float       @default(0)
   closingCash Float?
   expectedCash Float?
+  discrepancyAmount Float?
   openedAt    DateTime    @default(now())
   closedAt    DateTime?
 }

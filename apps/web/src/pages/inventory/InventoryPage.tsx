@@ -1,37 +1,49 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { inventoryApi } from '../../services/api/erp.api';
+import { NewProductModal } from '../../components/cashier/NewProductModal';
 
 export function InventoryPage() {
+  const { t, i18n } = useTranslation();
   const [rows, setRows] = useState<any[]>([]);
   const [moves, setMoves] = useState<any[]>([]);
+  const [showNew, setShowNew] = useState(false);
   const load = () => {
     inventoryApi.live().then(setRows).catch(() => {});
     inventoryApi.movements().then(setMoves).catch(() => {});
   };
   useEffect(load, []);
+  const locale = i18n.language === 'en' ? 'en-US' : 'ar-EG';
   return (
     <div style={{ padding: 8 }}>
-      <h3>المخزن — الرصيد الحي</h3>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <h3>{t('common.invTitle')}</h3>
+        <button className="wh-btn wh-btn-primary" onClick={() => setShowNew(true)}>{t('common.addItem')}</button>
+        <button className="wh-btn" onClick={() => window.print()}>{t('common.printReport')}</button>
+      </div>
+      <div className="printable-content">
       <table className="wh-table">
-        <thead><tr><th>الصنف</th><th>الكمية</th><th>متوسط التكلفة</th><th>القيمة</th></tr></thead>
+        <thead><tr><th>{t('common.liveStock')}</th><th>{t('common.quantity')}</th><th>{t('common.avgCost')}</th><th>{t('common.value')}</th></tr></thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} style={{ background: '#EDDDE7' }}>
+            <tr key={r.id} style={{ background: 'var(--wh-row)' }}>
               <td>{r.product?.name}</td><td>{r.quantity}</td><td>{Number(r.avgCost).toFixed(2)}</td>
               <td>{(r.quantity * r.avgCost).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <h3>سجل الحركات</h3>
+      <h3>{t('common.movements')}</h3>
       <table className="wh-table">
-        <thead><tr><th>النوع</th><th>التغير</th><th>التاريخ</th></tr></thead>
+        <thead><tr><th>{t('common.moveType')}</th><th>{t('common.change')}</th><th>{t('common.date')}</th></tr></thead>
         <tbody>
           {moves.map((m) => (
-            <tr key={m.id}><td>{m.type}</td><td>{m.qtyDelta}</td><td>{new Date(m.createdAt).toLocaleString('ar-EG')}</td></tr>
+            <tr key={m.id}><td>{m.type}</td><td>{m.qtyDelta}</td><td>{new Date(m.createdAt).toLocaleString(locale)}</td></tr>
           ))}
         </tbody>
       </table>
+      </div>
+      {showNew && <NewProductModal prefillBarcode={undefined} onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); load(); }} />}
     </div>
   );
 }

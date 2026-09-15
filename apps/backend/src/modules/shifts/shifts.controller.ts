@@ -7,9 +7,14 @@ import { ShiftsService } from './shifts.service';
 export class ShiftsController {
   constructor(private shifts: ShiftsService) {}
 
+  @Get('current')
+  current(@Req() req: any) {
+    return this.shifts.current(req.user.sub);
+  }
+
   @Get()
-  list(@Query('employeeId') employeeId?: string) {
-    return this.shifts.list(employeeId);
+  list(@Query('employeeId') employeeId?: string, @Query('branchId') branchId?: string) {
+    return this.shifts.list(employeeId, branchId);
   }
 
   @Post('open')

@@ -12,7 +12,7 @@ export function LegacyDataTable({ columns, rows, rowKey }: { columns: string[]; 
           const selected = sel === k;
           return (
             <tr key={k} onClick={() => setSel(k)}
-              style={selected ? { background: '#3388E0', color: '#fff' } : { background: '#EDDDE7' }}>
+              style={selected ? { background: 'var(--wh-row-sel)', color: '#fff' } : { background: 'var(--wh-row)' }}>
               {columns.map((c) => <td key={c}>{String(r[c] ?? '')}</td>)}
             </tr>
           );

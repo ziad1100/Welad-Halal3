@@ -18,11 +18,13 @@ export class UsersService {
     if (!username) throw new BadRequestException('username required');
     if (!dto.password || String(dto.password).length < 4) throw new BadRequestException('password too short');
     const role = dto.role ?? 'employee';
-    const level = role === 'owner' ? 100 : role === 'manager' ? 50 : 10;
-    if (role !== 'employee' && actor.permissionLevel < 100 && role === 'owner') {
-      throw new ForbiddenException('Only owner can create owners');
+    if (actor.role === 'employee' || actor.permissionLevel < 50) throw new ForbiddenException('Forbidden');
+    if (role === 'owner') {
+      throw new BadRequestException('Cannot create owner accounts');
     }
-    if (actor.permissionLevel < 50) throw new ForbiddenException('Forbidden');
+    if (!['manager', 'employee'].includes(role)) throw new BadRequestException('invalid role');
+    // managers CAN create other managers per confirmed rule — allowed
+    const level = role === 'manager' ? 50 : 10;
     const hash = await bcrypt.hash(String(dto.password), 10);
     const user = await this.prisma.user.create({
       data: {
@@ -44,6 +46,13 @@ export class UsersService {
   async update(actor: any, id: string, dto: any) {
     const target = await this.prisma.user.findUnique({ where: { id } });
     if (!target) throw new NotFoundException('User not found');
+    // nobody edits/deletes the owner except themself
+    if (target.role === 'owner' && actor.sub !== target.id) throw new ForbiddenException('Forbidden');
+    // only Owner (or self) can edit/delete a Manager
+    if (target.role === 'manager' && actor.role !== 'owner' && actor.sub !== target.id) {
+      // allow via permissionLevel fallback for legacy tokens without role
+      if (!(actor.permissionLevel >= 100)) throw new ForbiddenException('Forbidden');
+    }
     if (target.isOwner && !actor.isOwner) throw new ForbiddenException('Only owner can edit owners');
     if (dto.role === 'owner' && !actor.isOwner) throw new ForbiddenException('Only owner can grant owner');
     const before = { ...target, passwordHash: undefined };
@@ -65,10 +74,19 @@ export class UsersService {
   async resetPassword(actor: any, id: string, newPassword: string) {
     const target = await this.prisma.user.findUnique({ where: { id } });
     if (!target) throw new NotFoundException('User not found');
+    if (target.role === 'owner' && actor.sub !== target.id && !actor.isOwner)
+      throw new ForbiddenException('Only owner can reset owner password');
     if (target.isOwner && !actor.isOwner) throw new ForbiddenException('Only owner can reset owner password');
     const hash = await bcrypt.hash(String(newPassword), 10);
     await this.prisma.user.update({ where: { id }, data: { passwordHash: hash, forcePasswordChange: true } });
     await this.prisma.auditLog.create({ data: { userId: actor.sub, action: 'user.password_reset', entity: 'User', entityId: id } });
     return { ok: true };
+  }
+
+  async checkUsername(username: string) {
+    const u = String(username ?? '').trim();
+    if (!u) return { available: false };
+    const existing = await this.prisma.user.findFirst({ where: { username: { equals: u, mode: 'insensitive' } } });
+    return { available: !existing };
   }
 }

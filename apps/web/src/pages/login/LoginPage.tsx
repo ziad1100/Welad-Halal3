@@ -21,7 +21,7 @@ export function LoginPage() {
       setAuth(data.accessToken, data.user);
       nav(routeForRole(data.user.role, data.user.forcePasswordChange));
     } catch {
-      setErr('Invalid credentials');
+      setErr(t('auth.invalid'));
     }
   }
 
@@ -33,7 +33,7 @@ export function LoginPage() {
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" style={{ width: '100%', marginBottom: 8 }} />
         <label>{t('password')}</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" style={{ width: '100%', marginBottom: 8 }} />
-        {err && <div style={{ color: 'red', marginBottom: 8 }}>{err}</div>}
+        {err && <div style={{ color: 'var(--danger-color)', marginBottom: 8 }}>{err}</div>}
         <button className="wh-btn" type="submit" style={{ width: '100%' }}>{t('login')}</button>
       </form>
     </div>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { reportsApi } from '../../services/api/erp.api';
 
 export function ReportsPage() {
+  const { t, i18n } = useTranslation();
   const [daily, setDaily] = useState<any[]>([]);
   const [top, setTop] = useState<any[]>([]);
   const [inv, setInv] = useState<any>(null);
@@ -12,21 +14,28 @@ export function ReportsPage() {
     reportsApi.invVal().then(setInv).catch(() => {});
     reportsApi.exp().then(setExp).catch(() => {});
   }, []);
+  const locale = i18n.language === 'en' ? 'en-US' : 'ar-EG';
+  void locale;
   return (
     <div style={{ padding: 8 }}>
-      <h3>تقارير العمل</h3>
-      <h4>المبيعات اليومية (14 يوم)</h4>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <h3>{t('reports.title')}</h3>
+        <button className="wh-btn" onClick={() => window.print()}>{t('common.print')}</button>
+      </div>
+      <div className="printable-content">
+      <h4>{t('common.dailySales')}</h4>
       <table className="wh-table">
-        <thead><tr><th>اليوم</th><th>عدد الطلبات</th><th>الإجمالي</th></tr></thead>
+        <thead><tr><th>{t('common.day')}</th><th>{t('common.count')}</th><th>{t('common.total')}</th></tr></thead>
         <tbody>{daily.map((d) => <tr key={d.day}><td>{d.day}</td><td>{d.count}</td><td>{Number(d.total).toFixed(2)}</td></tr>)}</tbody>
       </table>
-      <h4>الأعلى مبيعاً</h4>
+      <h4>{t('common.topSelling')}</h4>
       <table className="wh-table">
-        <thead><tr><th>الصنف</th><th>الكمية</th><th>الإيراد</th></tr></thead>
-        <tbody>{top.map((t) => <tr key={t.productId}><td>{t.name}</td><td>{t.qty}</td><td>{Number(t.revenue).toFixed(2)}</td></tr>)}</tbody>
+        <thead><tr><th>{t('common.item')}</th><th>{t('common.quantity')}</th><th>{t('common.revenue')}</th></tr></thead>
+        <tbody>{top.map((t2) => <tr key={t2.productId}><td>{t2.name}</td><td>{t2.qty}</td><td>{Number(t2.revenue).toFixed(2)}</td></tr>)}</tbody>
       </table>
-      <h4>قيمة المخزون: {inv ? `${Number(inv.totalValue).toFixed(2)} (${inv.lines} بند)` : '...'}</h4>
-      <h4>المصروفات (30 يوم): {exp ? `${Number(exp.total).toFixed(2)} (${exp.count})` : '...'}</h4>
+      <h4>{t('common.invValue')}: {inv ? `${Number(inv.totalValue).toFixed(2)} (${inv.lines} ${t('common.entries')})` : '...'}</h4>
+      <h4>{t('common.exp30')}: {exp ? `${Number(exp.total).toFixed(2)} (${exp.count})` : '...'}</h4>
+      </div>
     </div>
   );
 }

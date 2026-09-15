@@ -13,7 +13,7 @@ function createWindow(kind: 'cashier' | 'display') {
     height: 900,
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
-  win.loadURL(kind === 'cashier' ? `${WEB_URL}/cashier` : `${WEB_URL}/display`);
+  win.loadURL(kind === 'cashier' ? `${WEB_URL}/cashier` : `${WEB_URL}/cashier`);
   return win;
 }
 

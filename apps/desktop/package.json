@@ -2,9 +2,10 @@
   "name": "@welad/desktop",
   "version": "0.1.0",
   "private": true,
-  "main": "electron/main.js",
+  "main": "dist/electron/main.js",
   "scripts": {
-    "dev": "electron .",
+    "build": "tsc -p tsconfig.json",
+    "dev": "npm run build && electron .",
     "start": "electron ."
   },
   "dependencies": {
